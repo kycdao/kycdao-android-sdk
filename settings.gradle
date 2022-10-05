@@ -1,0 +1,24 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+//        maven-publish { url 'https://jitpack.io' }
+
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        google()
+        mavenCentral()
+        jcenter()
+
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://sdk.withpersona.com/android/releases'}
+
+    }
+}
+rootProject.name = "KycDAO_AndroidSdk"
+include ':app'
+include ':lib'
