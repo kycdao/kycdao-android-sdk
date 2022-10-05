@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/connectWalletBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="connectWallet"
+        />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/createSessionBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="createSession"
+
+     />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/nonceText"
+        tools:text="nonce" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/login"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Login"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/loginId"
+        tools:text="login" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/addPersonalInfoBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add personal data"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/emailConfirmed"
+        tools:text="login" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/startPersona"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start persona verification"
+        />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/selectNft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select Nft"
+        />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/mintNFT"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mint Nft"
+        />
+
+
+
+
+</androidx.appcompat.widget.LinearLayoutCompat>

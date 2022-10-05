@@ -28,11 +28,11 @@ class ProgressActivity : AppCompatActivity(), AndroidScopeComponent {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.frame_layout)
 
-        if (savedInstanceState == null) {
+       if (savedInstanceState == null) {
             openFragment(ProgressFragment())
-            ioScope.launch {
-                testUseCase()
-            }
+       //     ioScope.launch {
+       //         testUseCase()
+       //     }
         }
     }
 

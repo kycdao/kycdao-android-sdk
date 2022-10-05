@@ -3,6 +3,7 @@ package com.kycdao.android.sdk.usecase
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.kycdao.android.sdk.db.LocalDataSource
+import com.kycdao.android.sdk.model.KycSession
 import kotlinx.coroutines.delay
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt
@@ -19,8 +20,8 @@ class AuthorizeMintingGetTransactionReceiptUseCaseImp(
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
-    override suspend fun invoke() {
-        val transactionHash = localDataSource.getKycSession().authorizeMintingResponse?.tx_hash
+    override suspend fun invoke(kycSession: KycSession) {
+        val transactionHash = kycSession.authorizeMintingResponse?.tx_hash
         if (transactionHash != null) {
             val result = pollGetTransactionReceipt(transactionHash)
             saveResult(result)
@@ -30,7 +31,7 @@ class AuthorizeMintingGetTransactionReceiptUseCaseImp(
         }
     }
 
-    private suspend fun saveResult(result: Boolean) {
+    private fun saveResult(result: Boolean) {
         localDataSource.saveKycSession(localDataSource.getKycSession().copy(
             authorizeMintingFinished = true,
         ))
@@ -49,7 +50,9 @@ class AuthorizeMintingGetTransactionReceiptUseCaseImp(
             if (ethGetTransactionReceipt.transactionReceipt.isPresent) {
                 val transactionReceipt = ethGetTransactionReceipt.transactionReceipt.get()
                 val success = transactionReceipt.status == "0x1"
-                // TODO error if status not 1
+                if(!success) {
+                    throw Exception("Couldn't get receipt")
+                }
                 return success
             }
             Timber.d("no result, retry in $REPEAT_TIME ms")

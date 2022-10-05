@@ -7,22 +7,22 @@ import com.kycdao.android.sdk.wcsession._WCSession
 
 class LocalDataSourceImp : LocalDataSource {
 
-    private var kycSession = KycSession()
+    //private var kycSession = KycSession()
     lateinit var wcSession: _WCSession
     lateinit var statusDto: StatusDto
 
     override fun getKycSession(): KycSession {
-        return kycSession
+TODO()
     }
 
     override fun saveKycSession(kycSession: KycSession) {
-        this.kycSession = kycSession
+       TODO()
     }
 
     override fun saveKycUser(kycUser: KycUser) {
-        kycSession = kycSession.copy(
-            kycUser = kycUser
-        )
+      //  kycSession = kycSession.copy(
+      //      kycUser = kycUser
+      //  )
     }
 
     override fun getWCSession(): _WCSession {

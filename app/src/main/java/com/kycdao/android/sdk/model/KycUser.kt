@@ -2,13 +2,13 @@ package com.kycdao.android.sdk.model
 
 import java.io.Serializable
 
-data class KycUser (
+data class KycUser ( //van
     val id: Long? = null,
     val extId: String = "",
-    val email: String? = null,
-    val residency: String? = null,
-    val isLegalEntity: Boolean? = null,
-    val emailConfirmed: String? = null,
+    var email: String? = null,
+    var residency: String? = null,
+    var isLegalEntity: Boolean? = null,
+    var emailConfirmed: String? = null,
     val disclaimerAccepted: String? = null,
     val verificationRequests: List<VerificationRequest> = emptyList(),
     val availableImages: List<AvailableImage> = emptyList(),

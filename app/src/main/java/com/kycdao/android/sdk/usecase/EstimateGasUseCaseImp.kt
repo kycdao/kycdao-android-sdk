@@ -1,6 +1,7 @@
 package com.kycdao.android.sdk.usecase
 
 import com.kycdao.android.sdk.db.LocalDataSource
+import com.kycdao.android.sdk.model.VerificationType
 import org.web3j.abi.FunctionEncoder
 import org.web3j.abi.datatypes.Function
 import org.web3j.abi.datatypes.generated.Uint32
@@ -16,7 +17,7 @@ class EstimateGasUseCaseImp(
 
     override suspend fun invoke() : BigInteger {
         val walletAddress = localDataSource.getWCSession().session.approvedAccounts()!!.first()
-        val contractAddress = localDataSource.getStatus().smart_contracts["PolygonMumbai"]!!.kyc
+        val contractAddress = localDataSource.getStatus().smart_contracts_info["PolygonMumbai"]!![VerificationType.KYC]
         val authCode = localDataSource.getKycSession().authorizeMintingResponse?.code!!.toLong()
 
         Timber.d( "---------- Input ----------")
@@ -36,7 +37,7 @@ class EstimateGasUseCaseImp(
             null,
             null,
             null,
-            contractAddress,
+            contractAddress!!.address,
             FunctionEncoder.encode(function)
         )
         val ethEstimateGas = web3j.ethEstimateGas(transaction).sendAsync().get()

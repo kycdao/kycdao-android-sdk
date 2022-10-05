@@ -1,6 +1,7 @@
 package com.kycdao.android.sdk.usecase
 
 import com.kycdao.android.sdk.db.LocalDataSource
+import com.kycdao.android.sdk.model.KycSession
 import com.kycdao.android.sdk.network.NetworkDatasource
 import com.kycdao.android.sdk.network.api.UpdateUserRequestBody
 import timber.log.Timber
@@ -10,12 +11,11 @@ class UpdateUserUseCaseImp(
     private val localDataSource: LocalDataSource
 ) : UpdateUserUseCase {
 
-    override suspend fun invoke() {
-        val kycSession = localDataSource.getKycSession()
+    override suspend fun invoke(kycSession: KycSession) {
 
-        val email = kycSession.kycUser.email
-        val residency = kycSession.kycUser.residency
-        val legalEntity = kycSession.kycUser.isLegalEntity
+        val email = kycSession.sessionData.user.email
+        val residency = kycSession.sessionData.user.residency
+        val legalEntity = kycSession.sessionData.user.isLegalEntity
 
         Timber.d( "---------- Input ----------")
         Timber.d( "email: $email")
@@ -30,7 +30,10 @@ class UpdateUserUseCaseImp(
                     legal_entity = legalEntity!!,
                 )
             )
-            localDataSource.saveKycUser(userDto.mapToKycUser())
+            val userFromNetwork = userDto.mapToKycUser()
+            kycSession.apply {
+                sessionData.user = userFromNetwork
+            }
         } else {
             Timber.e( "Missed user information")
         }

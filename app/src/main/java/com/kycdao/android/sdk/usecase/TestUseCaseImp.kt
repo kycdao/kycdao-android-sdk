@@ -39,7 +39,6 @@ class TestUseCaseImp(
         Timber.d( "start")
         nextStep()
     }
-
     private suspend fun nextStep() {
         val kycSession = localDataSource.getKycSession()
         val state = kycSession.getState()
@@ -82,18 +81,18 @@ class TestUseCaseImp(
     }
 
     private suspend fun userInformation() {
-        val success = getUserInformationUseCase()
-        if (success) {
-            updateUserUseCase()
-
-            if (!localDataSource.getKycSession().isDisclaimerAccepted()) {
-                sendDisclaimerAcceptUseCase()
-            }
-
-            if (!localDataSource.getKycSession().isEmailConfirmed()) {
-                sendEmailConfirm()
-            }
-        }
+       // val success = getUserInformationUseCase()
+       // if (success) {
+       //     updateUserUseCase()
+//
+       //     if (!localDataSource.getKycSession().isDisclaimerAccepted()) {
+       //         sendDisclaimerAcceptUseCase()
+       //     }
+//
+       //     if (!localDataSource.getKycSession().isEmailConfirmed()) {
+       //         sendEmailConfirm()
+       //     }
+       // }
     }
 
     private suspend fun sendEmailConfirm() {
@@ -104,27 +103,27 @@ class TestUseCaseImp(
     }
 
     private suspend fun pollEmailConfirmed() {
-        pollEmailConfirmedUseCase()
+     //   pollEmailConfirmedUseCase()
     }
 
     private suspend fun identityVerification() {
-        identityVerificationUseCase()
+       // identityVerificationUseCase()
     }
 
     private suspend fun pollIdentityVerificationRequest() {
-        pollIdentityVerificationRequestUseCase()
+        //pollIdentityVerificationRequestUseCase()
     }
 
     private suspend fun selectNFT() {
-        val selectedNftId = nftSelectionUseCase()
-        Timber.d( "selectedNftId: $selectedNftId")
-        selectedNftId?.let {
-            authorizeMintingUseCase.invoke(it)
-        }
+        //val selectedNftId = nftSelectionUseCase()
+      //  Timber.d( "selectedNftId: $selectedNftId")
+       // selectedNftId?.let {
+            //authorizeMintingUseCase.invoke(it)
+        //}
     }
 
     private suspend fun checkAuthorizeMinting() {
-        authorizeMintingGetTransactionReceiptUseCase()
+        //authorizeMintingGetTransactionReceiptUseCase()
     }
 
     private suspend fun calculateFee() {

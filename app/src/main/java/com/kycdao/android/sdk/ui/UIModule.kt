@@ -15,9 +15,8 @@ val uiModule = module {
     viewModel { parameters ->
         NftSelectorViewModel(parameters.get())
     }
-
-    viewModel {
-        ProgressViewModel()
+    viewModel { params->
+        ProgressViewModel(activity = params.get())
     }
 
 //    factory<KycActivityResultContract<Any?, PersonalDataResult>> {

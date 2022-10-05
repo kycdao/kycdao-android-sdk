@@ -1,21 +1,26 @@
 package com.kycdao.android.sdk.model
 
 import com.kycdao.android.sdk.dto.AuthorizeMintingResponse
+import com.kycdao.android.sdk.dto.SmartContractConfigDto
 
 data class KycSession(
+    val walletAddress: String ,
+    val network: Network,
+    val kycConfig: SmartContractConfig?,
+    val accreditedConfig: SmartContractConfig?,
+    val personaData : Persona,
+    val sessionData: SessionData,
     val walletConnected: Boolean = false,
-    val kycUser: KycUser = KycUser(),
-    val nonce: String? = null,
     val signature: String? = null,
     val identityVerificationCompleted: Boolean = false,
-    val authorizeMintingResponse: AuthorizeMintingResponse? = null,
+    var authorizeMintingResponse: AuthorizeMintingResponse? = null,
     val authorizeMintingFinished: Boolean = false,
     val feeCalculationFinished: Boolean = false,
     val mintTransactionId: String? = null,
     val mintTokenId: String? = null,
     val mintTokenSent: Boolean = false,
 ) {
-    fun getState() : State {
+    fun getState(): State {
         return when {
             !walletConnected() -> State.CONNECT_WALLET
             !hasSession() -> State.SESSION_REQUIRED
@@ -34,40 +39,42 @@ data class KycSession(
         }
     }
 
-    fun loginProof() : String {
-        return "kycDAO-login-${nonce}"
+    fun loginProof(): String {
+        return "kycDAO-login-${sessionData.nonce}"
     }
 
-    private fun walletConnected() : Boolean {
+    private fun walletConnected(): Boolean {
         return walletConnected
     }
 
     private fun hasSession(): Boolean {
-        return !nonce.isNullOrBlank()
+        return !sessionData.nonce.isNullOrBlank()
     }
 
-    private fun isLogged() : Boolean {
-        return  kycUser.id != null
+    private fun isLogged(): Boolean {
+        return sessionData.user.id != null
     }
 
-    fun isEmailConfirmed() : Boolean {
-        return kycUser.isEmailConfirmed()
+    fun isEmailConfirmed(): Boolean {
+        return sessionData.user.isEmailConfirmed()
     }
 
-    fun isDisclaimerAccepted() : Boolean {
-        return kycUser.disclaimerAccepted?.isNotEmpty() ?: false
+    fun isDisclaimerAccepted(): Boolean {
+        return sessionData.user.disclaimerAccepted?.isNotEmpty() ?: false
     }
 
     fun hasUserInfo(): Boolean {
-        return !kycUser.email.isNullOrBlank() && !kycUser.residency.isNullOrBlank() && kycUser.isLegalEntity != null
+        sessionData.user.let { user ->
+            return !user.email.isNullOrBlank() && !user.residency.isNullOrBlank() && user.isLegalEntity != null
+        }
     }
 
-    private fun identityVerificationCompleted() : Boolean {
+    private fun identityVerificationCompleted(): Boolean {
         return identityVerificationCompleted or isIdentityVerified()
     }
 
-    private fun isIdentityVerified() : Boolean {
-        return kycUser.isIdentityVerified()
+    private fun isIdentityVerified(): Boolean {
+        return sessionData.user.isIdentityVerified()
     }
 
     private fun nftSelected(): Boolean {

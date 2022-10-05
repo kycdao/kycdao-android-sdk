@@ -2,6 +2,7 @@ package com.kycdao.android.sdk.usecase
 
 import androidx.activity.result.ActivityResultRegistry
 import com.kycdao.android.sdk.db.LocalDataSource
+import com.kycdao.android.sdk.model.KycUser
 import com.kycdao.android.sdk.model.PersonalDataResult
 import com.kycdao.android.sdk.ui.KycActivityResultContract
 import timber.log.Timber
@@ -14,8 +15,7 @@ class GetUserInformationUseCaseImp(
     private val getUserInformationContract : KycActivityResultContract<Any?, PersonalDataResult>
     ) : GetUserInformationUseCase {
 
-    override suspend fun invoke() : Boolean = suspendCoroutine { continuation ->
-        val kycUser = localDataSource.getKycSession().kycUser
+    override suspend fun invoke(kycUser: KycUser) : Boolean = suspendCoroutine { continuation ->
         val launcher = activityResultRegistry.register(
             "GetUserInformationContract",
             getUserInformationContract

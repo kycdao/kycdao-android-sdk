@@ -84,18 +84,22 @@ val domainModule = module {
     factory<SendMintTokenUseCase> {
         SendMintTokenUseCaseImp(get(), get())
     }
-
+    factory<IdentityVerificationUseCase> {
+        IdentityVerificationUseCaseImp(
+            localDataSource = get()
+        )
+    }
+    factory<NftSelectionUseCase> {
+        NftSelectionUseCaseImp(
+            NftSelectorContract()
+        )
+    }
     scope<ProgressActivity> {
         factory<TestUseCase> {
             TestUseCaseImp(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
                 get(), get(), get(), get(), get(), get(), get(), get(), get(), get())
         }
-        factory<IdentityVerificationUseCase> {
-            IdentityVerificationUseCaseImp(
-                activityResultRegistry = get<ProgressActivity>().activityResultRegistry,
-                localDataSource = get()
-            )
-        }
+
         factory<GetUserInformationUseCase> {
             GetUserInformationUseCaseImp(
                 activityResultRegistry = get<ProgressActivity>().activityResultRegistry,
@@ -104,13 +108,7 @@ val domainModule = module {
             )
         }
 
-        factory<NftSelectionUseCase> {
-            NftSelectionUseCaseImp(
-                activityResultRegistry = get<ProgressActivity>().activityResultRegistry,
-                get(),
-                NftSelectorContract()
-            )
-        }
+
     }
 
 }

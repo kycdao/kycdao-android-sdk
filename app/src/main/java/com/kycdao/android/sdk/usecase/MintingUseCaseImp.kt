@@ -1,6 +1,7 @@
 package com.kycdao.android.sdk.usecase
 
 import com.kycdao.android.sdk.db.LocalDataSource
+import com.kycdao.android.sdk.model.VerificationType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,7 +25,7 @@ class MintingUseCaseImp(
     override suspend fun invoke(): Unit = suspendCoroutine { continuation ->
         ioScope.launch {
             val wcSession = localDataSource.getWCSession()
-            val contractAddress = localDataSource.getStatus().smart_contracts["PolygonMumbai"]!!.kyc
+            val contractAddress = localDataSource.getStatus().smart_contracts_info["PolygonMumbai"]!![VerificationType.KYC]
             val gasPrice = ethGasPriceUseCase()
             val finalGasPrice = gasPrice.max(CalculateFeeUseCaseImp.MIN_GAS_PRICE)
             val gas = estimateGasUseCaseImp()
@@ -53,7 +54,7 @@ class MintingUseCaseImp(
                 Session.MethodCall.SendTransaction(
                     id = System.currentTimeMillis(),
                     from = walletAddress,
-                    to = contractAddress,
+                    to = contractAddress!!.address,
                     nonce = null,
                     gasPrice = gasPriceString,
                     gasLimit = gasLimit,

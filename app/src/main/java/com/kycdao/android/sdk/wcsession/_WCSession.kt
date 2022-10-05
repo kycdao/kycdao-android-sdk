@@ -9,8 +9,6 @@ class _WCSession(
     var config: Session.Config,
     var session: Session
 ) {
-
-
     var approvedCallback : Function? = null
 
     init {

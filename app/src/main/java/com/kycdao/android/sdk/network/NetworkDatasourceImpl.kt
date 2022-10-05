@@ -4,6 +4,7 @@ import com.kycdao.android.sdk.dto.AuthorizeMintingResponse
 import com.kycdao.android.sdk.dto.SessionDto
 import com.kycdao.android.sdk.dto.StatusDto
 import com.kycdao.android.sdk.dto.UserDto
+import com.kycdao.android.sdk.model.Network
 import com.kycdao.android.sdk.network.api.*
 
 class NetworkDatasourceImpl(
@@ -44,6 +45,10 @@ class NetworkDatasourceImpl(
 
     override suspend fun sendMintToken(body: MintTokenBody) {
         return api.sendMintToken(body)
+    }
+
+    override suspend fun getSupportedNetworks(): List<Network> {
+        return api.getNetworks()
     }
 
 }

@@ -2,17 +2,18 @@ package com.kycdao.android.sdk.dto
 
 import com.kycdao.android.sdk.model.KycSession
 import com.kycdao.android.sdk.model.KycUser
+import com.kycdao.android.sdk.model.SessionData
 
 data class SessionDto(
     val id: String,
     val nonce: String,
     val user: UserDto? = null
 ) {
-    fun mapToKycSession() : KycSession {
-        return KycSession(
-            walletConnected = true,
+    fun mapToSessionData() : SessionData {
+        return SessionData(
+            id = id,
             nonce = nonce,
-            kycUser = user?.mapToKycUser() ?: KycUser()
+            user = user?.mapToKycUser() ?: KycUser()
         )
     }
 }

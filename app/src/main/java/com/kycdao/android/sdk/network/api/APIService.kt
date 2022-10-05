@@ -4,6 +4,7 @@ import com.kycdao.android.sdk.dto.AuthorizeMintingResponse
 import com.kycdao.android.sdk.dto.SessionDto
 import com.kycdao.android.sdk.dto.StatusDto
 import com.kycdao.android.sdk.dto.UserDto
+import com.kycdao.android.sdk.model.Network
 import retrofit2.http.*
 
 interface APIService {
@@ -44,4 +45,7 @@ interface APIService {
     suspend fun sendMintToken(
         @Body body: MintTokenBody,
     )
+
+    @GET("networks")
+    suspend fun getNetworks() : List<Network>
 }
