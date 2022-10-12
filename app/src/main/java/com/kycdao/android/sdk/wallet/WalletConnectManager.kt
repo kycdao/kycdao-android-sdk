@@ -71,6 +71,7 @@ object WalletConnectManager : CustomKoinComponent() {
      * @param onConnectionEstablished A callback function to run when a connection was successfully established between the wallet and the client.
      */
     fun subscribeOnConnectionEstablished(onConnectionEstablished : (WalletSession)->Unit){
+        wcSession = createWCSession()
         wcSession?.addListenerOnEstablished { walletSession ->
             Timber.d( "wallet connect approved")
             onConnectionEstablished(walletSession)
@@ -80,7 +81,6 @@ object WalletConnectManager : CustomKoinComponent() {
      * Starts connection process to a wallet via WalletConnect
      */
     fun connectWallet(){
-        wcSession = createWCSession()
         wcSession?.let {session ->
             WalletIntent.executeFromUri(session.wcConfig.toWCUri())
         }

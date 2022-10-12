@@ -43,7 +43,7 @@ afterEvaluate {
 
                 groupId = 'com.github.kycDao'
                 artifactId = 'kycDao-android'
-                version = '0.14'
+                version = '0.15'
             }
         }
         repositories {
