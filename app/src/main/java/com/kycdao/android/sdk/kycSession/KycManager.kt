@@ -2,16 +2,19 @@ package com.kycdao.android.sdk.kycSession
 
 
 import androidx.activity.ComponentActivity
+import com.kycdao.android.sdk.CustomKoinComponent
+import com.kycdao.android.sdk.dto.AuthorizeMintingResponse
 import com.kycdao.android.sdk.dto.SmartContractConfigDto
 import com.kycdao.android.sdk.dto.toModel
 import com.kycdao.android.sdk.model.*
 import com.kycdao.android.sdk.network.NetworkDatasource
+import com.kycdao.android.sdk.network.api.AuthorizeMintingRequestBody
 import com.kycdao.android.sdk.network.api.CreateSessionRequestBody
 import com.kycdao.android.sdk.network.api.LoginRequestBody
 import com.kycdao.android.sdk.network.api.MintTokenBody
-import com.kycdao.android.sdk.ui.convertBigInteger
 import com.kycdao.android.sdk.usecase.*
 import com.kycdao.android.sdk.util.asHexString
+import com.kycdao.android.sdk.util.convertBigInteger
 import com.kycdao.android.sdk.util.seconds
 import com.kycdao.android.sdk.wallet.WalletSession
 import kotlinx.coroutines.Job
@@ -31,9 +34,8 @@ import kotlin.Exception
 /**
  * A class responsible for managing the kycSession
  */
-class KycManager() : KoinComponent {
-    private val networkDatasource: NetworkDatasource =
-        KoinJavaComponent.get<NetworkDatasource>(NetworkDatasource::class.java)
+class KycManager() : CustomKoinComponent() {
+    private val networkDatasource: NetworkDatasource by inject()
     private val web3j: Web3j by inject()
     lateinit var kycSession: KycSession
     val updateUserUseCase: UpdateUserUseCase by inject()
@@ -131,7 +133,6 @@ class KycManager() : KoinComponent {
 
     val pollEmailUseCase: PollEmailConfirmedUseCase by inject()
     val pollIdentityVerificationRequestUseCase: PollIdentityVerificationRequestUseCase by inject()
-    val selectNftSelectionUseCase: NftSelectionUseCase by inject()
     private var emailPollJob: Job? = null
     private var verificationPollJob: Job? = null
     private fun pollEmailConfirmed() {
@@ -153,26 +154,25 @@ class KycManager() : KoinComponent {
      *
      * @return selectedImage Id
      */
-    suspend fun selectAndPrepareForNFTMinting(activity: ComponentActivity): String? {
-        val selected = selectNftSelectionUseCase(kycSession, activity)
-        Timber.d("Selected Nft Image: $selected")
-        if (selected != null) {
-            authorizeMintingOfNFT(selected)
-            checkAuthorizeMinting()
-        }
-        return selected
+
+    suspend fun prepareForMintingOfNFT(selectedImage: String) {
+        Timber.d("Selected Nft Image: $selectedImage")
+        authorizeMintingOfNFT(selectedImage)
+        checkAuthorizeMinting()
     }
 
     private fun getTransactionReceipt(txHash: String): EthGetTransactionReceipt {
         return web3j.ethGetTransactionReceipt(txHash).sendAsync().get()
     }
-    suspend fun testSuspend(){
-        while(true){
+
+    suspend fun testSuspend() {
+        while (true) {
             Timber.d("Test suspend")
             delay(3.seconds)
 
         }
     }
+
     private suspend fun continueWhenTransactionFinished(txHash: String): EthGetTransactionReceipt {
         while (true) {
             delay(5.seconds)
@@ -288,9 +288,26 @@ class KycManager() : KoinComponent {
         continueWhenTransactionFinished(mintingTxHash)
     }
 
-    val authorizeMintingUseCase: AuthorizeMintingUseCase by inject()
     private suspend fun authorizeMintingOfNFT(selectedNftId: String) {
-        authorizeMintingUseCase(selectedNftId, kycSession)
+        val blockchainAccount = kycSession.sessionData.user.blockchainAccounts.first()
+
+        Timber.d( "---------- Input ----------")
+        Timber.d( "selectedNftId: $selectedNftId")
+        Timber.d( "blockchainAccount: $blockchainAccount")
+
+        val authorizeMintingResponse: AuthorizeMintingResponse = networkDatasource.authorizeMinting(
+            AuthorizeMintingRequestBody(
+                //network is currently baked in
+                blockchain_account_id = blockchainAccount.id,
+                selected_image_id = selectedNftId
+            )
+        )
+
+        Timber.d( "---------- Output ----------")
+        Timber.d( "authorizeMintingResponse: $authorizeMintingResponse")
+
+        kycSession.authorizeMintingResponse = authorizeMintingResponse
+
     }
 
     private suspend fun fetchSupportedNetworks(): List<Network> {

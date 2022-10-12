@@ -1,6 +1,6 @@
 package com.kycdao.android.sdk.wcsession
 
-import org.walletconnect.Session
+import com.kycdao.android.sdk.walletconnect.Session
 import timber.log.Timber
 
 typealias Function = () -> Unit

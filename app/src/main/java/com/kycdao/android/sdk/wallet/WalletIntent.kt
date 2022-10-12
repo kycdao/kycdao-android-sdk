@@ -3,12 +3,11 @@ package com.kycdao.android.sdk.wallet
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import org.koin.core.component.KoinComponent
+import com.kycdao.android.sdk.CustomKoinComponent
 import org.koin.core.component.inject
-import org.koin.java.KoinJavaComponent.inject
 import timber.log.Timber
 
-object WalletIntent: KoinComponent{
+object WalletIntent: CustomKoinComponent(){
     private val context: Context by inject()
 
     fun executeFromUri(wcUri: String){

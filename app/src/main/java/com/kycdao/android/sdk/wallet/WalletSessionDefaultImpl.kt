@@ -3,7 +3,7 @@ package com.kycdao.android.sdk.wallet
 import com.kycdao.android.sdk.model.MintingProperties
 import com.kycdao.android.sdk.model.MintingTransactionResult
 import org.komputing.khex.extensions.toHexString
-import org.walletconnect.Session
+import com.kycdao.android.sdk.walletconnect.Session
 import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine

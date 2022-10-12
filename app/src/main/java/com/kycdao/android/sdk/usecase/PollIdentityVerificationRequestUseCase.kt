@@ -1,7 +1,6 @@
 package com.kycdao.android.sdk.usecase
 
-import com.kycdao.android.sdk.model.KycSession
-import com.kycdao.android.sdk.model.KycUser
+import com.kycdao.android.sdk.kycSession.KycSession
 import kotlinx.coroutines.Job
 
 interface PollIdentityVerificationRequestUseCase {

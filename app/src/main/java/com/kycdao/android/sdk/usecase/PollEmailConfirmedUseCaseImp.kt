@@ -1,17 +1,14 @@
 package com.kycdao.android.sdk.usecase
 
-import com.kycdao.android.sdk.db.LocalDataSource
-import com.kycdao.android.sdk.model.KycUser
+import com.kycdao.android.sdk.kycSession.KycUser
 import com.kycdao.android.sdk.network.NetworkDatasource
 import kotlinx.coroutines.*
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
+
 
 class PollEmailConfirmedUseCaseImp(
     private val networkDatasource: NetworkDatasource,
-    private val localDataSource: LocalDataSource,
     private val ioScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : PollEmailConfirmedUseCase {
 

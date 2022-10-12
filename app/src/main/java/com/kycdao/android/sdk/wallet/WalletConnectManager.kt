@@ -1,11 +1,17 @@
 package com.kycdao.android.sdk.wallet
 
-import com.kycdao.android.sdk.ExampleApplication
+import com.kycdao.android.sdk.CustomKoinComponent
+import com.kycdao.android.sdk.server.BridgeServer
+import com.squareup.moshi.Moshi
+import okhttp3.OkHttpClient
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import org.komputing.khex.extensions.toNoPrefixHexString
-import org.walletconnect.Session
-import org.walletconnect.impls.MoshiPayloadAdapter
-import org.walletconnect.impls.OkHttpTransport
-import org.walletconnect.impls.WCSession
+import com.kycdao.android.sdk.walletconnect.Session
+import com.kycdao.android.sdk.walletconnect.impls.MoshiPayloadAdapter
+import com.kycdao.android.sdk.walletconnect.impls.OkHttpTransport
+import com.kycdao.android.sdk.walletconnect.impls.WCSession
+import com.kycdao.android.sdk.walletconnect.impls.WCSessionStore
 import timber.log.Timber
 import java.util.*
 
@@ -16,8 +22,16 @@ import java.util.*
  *
  *
  */
-object WalletConnectManager {
+object WalletConnectManager : CustomKoinComponent() {
     private var wcSession : WalletSessionDefaultImpl? = null
+
+    private val moshi : Moshi by inject()
+    private val storage : WCSessionStore by inject()
+    private val client : OkHttpClient by inject(qualifier = named("WalletConnectClient"))
+    private val bridge : BridgeServer by inject()
+    init {
+        bridge.start()
+    }
 
     private fun createWCSession() : WalletSessionDefaultImpl{
         Timber.d( "create wallet connect session")
@@ -29,9 +43,9 @@ object WalletConnectManager {
             key)
         val session = WCSession(
             config,
-            MoshiPayloadAdapter(ExampleApplication.moshi),
-            ExampleApplication.storage,
-            OkHttpTransport.Builder(ExampleApplication.client, ExampleApplication.moshi),
+            MoshiPayloadAdapter(moshi),
+            storage,
+            OkHttpTransport.Builder(client, moshi),
             Session.PeerMeta(url="https://staging.kycdao.xyz/",name = "KYCDAO",description = "A multichain platform for issuing reusable, onchain KYC verifications",icons = arrayListOf())
         ).also {
             it.offer()

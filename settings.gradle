@@ -13,7 +13,6 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         jcenter()
-
         maven { url 'https://jitpack.io' }
         maven { url 'https://sdk.withpersona.com/android/releases'}
 
@@ -21,4 +20,3 @@ dependencyResolutionManagement {
 }
 rootProject.name = "KycDAO_AndroidSdk"
 include ':app'
-include ':lib'

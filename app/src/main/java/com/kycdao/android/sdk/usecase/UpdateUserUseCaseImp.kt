@@ -1,14 +1,12 @@
 package com.kycdao.android.sdk.usecase
 
-import com.kycdao.android.sdk.db.LocalDataSource
-import com.kycdao.android.sdk.model.KycSession
+import com.kycdao.android.sdk.kycSession.KycSession
 import com.kycdao.android.sdk.network.NetworkDatasource
 import com.kycdao.android.sdk.network.api.UpdateUserRequestBody
 import timber.log.Timber
 
 class UpdateUserUseCaseImp(
     private val networkDatasource : NetworkDatasource,
-    private val localDataSource: LocalDataSource
 ) : UpdateUserUseCase {
 
     override suspend fun invoke(kycSession: KycSession) {

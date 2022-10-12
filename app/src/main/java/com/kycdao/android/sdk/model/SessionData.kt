@@ -1,6 +1,6 @@
 package com.kycdao.android.sdk.model
 
-import com.kycdao.android.sdk.dto.UserDto
+import com.kycdao.android.sdk.kycSession.KycUser
 
 data class SessionData(
     val id: String,

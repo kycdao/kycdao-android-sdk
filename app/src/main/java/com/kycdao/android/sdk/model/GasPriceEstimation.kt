@@ -1,6 +1,5 @@
 package com.kycdao.android.sdk.model
 
-import com.kycdao.android.sdk.usecase.CalculateFeeUseCaseImp
 import org.web3j.utils.Convert
 import java.math.BigInteger
 
