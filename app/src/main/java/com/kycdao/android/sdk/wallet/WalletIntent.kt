@@ -8,8 +8,7 @@ import org.koin.core.component.inject
 import org.koin.java.KoinJavaComponent.inject
 import timber.log.Timber
 
-class WalletIntent(
-) : KoinComponent{
+object WalletIntent: KoinComponent{
     private val context: Context by inject()
 
     fun executeFromUri(wcUri: String){

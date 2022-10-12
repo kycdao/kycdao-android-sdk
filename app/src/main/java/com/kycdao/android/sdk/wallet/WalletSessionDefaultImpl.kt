@@ -2,29 +2,15 @@ package com.kycdao.android.sdk.wallet
 
 import com.kycdao.android.sdk.model.MintingProperties
 import com.kycdao.android.sdk.model.MintingTransactionResult
-import com.kycdao.android.sdk.model.VerificationType
-import com.kycdao.android.sdk.usecase.CalculateFeeUseCaseImp
-import com.kycdao.android.sdk.usecase.EstimateGasUseCase
-import com.kycdao.android.sdk.usecase.EstimateGasUseCaseImp
-import com.kycdao.android.sdk.usecase.EthGasPriceUseCase
-import com.kycdao.android.sdk.wcsession._WCSession
-import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.komputing.khex.extensions.toHexString
 import org.walletconnect.Session
-import org.walletconnect.impls.WCSession
-import org.web3j.abi.FunctionEncoder
-import org.web3j.abi.datatypes.Function
-import org.web3j.abi.datatypes.generated.Uint32
 import timber.log.Timber
-import java.math.BigInteger
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 private typealias FunctionWithSession = (WalletSession) -> Unit
 
-class WalletSessionWCImpl(
+class WalletSessionDefaultImpl(
     val wcSession: Session,
     val wcConfig: Session.Config
 ) : WalletSession {
@@ -34,7 +20,7 @@ class WalletSessionWCImpl(
             override fun onStatus(status: Session.Status) {
                 Timber.d("onStatus: $status")
                 if (status == Session.Status.Approved) {
-                    approvedCallback.invoke(this@WalletSessionWCImpl)
+                    approvedCallback.invoke(this@WalletSessionDefaultImpl)
                 }
             }
 
@@ -53,6 +39,9 @@ class WalletSessionWCImpl(
         return chainId
     }
 
+    /**
+     * Valami komment
+     */
     override suspend fun personalSign(walletAddress: String, message: String): String =
         suspendCoroutine { continuation ->
             val messageHex = message.toByteArray(Charsets.UTF_8).toHexString()
@@ -74,8 +63,8 @@ class WalletSessionWCImpl(
                     continuation.resume(signature)
                 }
             }
-            val intent = WalletIntent()
-            intent.executeFromUri(wcConfig.toWCUri())
+
+            WalletIntent.executeFromUri(wcConfig.toWCUri())
         }
 
     override suspend fun sendMintingTransaction(
@@ -105,7 +94,6 @@ class WalletSessionWCImpl(
             }
         }
         Timber.d( "Open wallet for minting")
-        val intent = WalletIntent()
-        intent.executeFromUri(wcConfig.toWCUri())
+        WalletIntent.executeFromUri(wcConfig.toWCUri())
     }
 }

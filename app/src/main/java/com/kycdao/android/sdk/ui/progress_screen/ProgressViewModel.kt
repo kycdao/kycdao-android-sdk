@@ -16,6 +16,7 @@ import com.kycdao.android.sdk.network.api.APIService
 import com.kycdao.android.sdk.ui.progress_screen.model.Step
 import com.kycdao.android.sdk.wallet.WalletConnectManager
 import com.kycdao.android.sdk.wallet.WalletSession
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
@@ -24,7 +25,7 @@ import org.koin.java.KoinJavaComponent
 import timber.log.Timber
 
 class ProgressViewModel(
-    private val activity : ComponentActivity
+    private val activity: ComponentActivity
 ) : ViewModel() {
     val kycManager = KycManager()
     var myWalletSession: WalletSession? = null
@@ -37,6 +38,17 @@ class ProgressViewModel(
                 val choosenWallet =
                     session.getAvailableWallets()?.first() ?: throw Exception("No wallet")
                 myKycSession.update { kycManager.createSession(choosenWallet, session) }
+            }
+        }
+    }
+
+    fun testSuspend() {
+        viewModelScope.launch {
+            try {
+                kycManager.testSuspend()
+            } catch (e: CancellationException) {
+                Timber.d("Job was cancelled")
+                e.printStackTrace()
             }
         }
     }
@@ -67,19 +79,21 @@ class ProgressViewModel(
             kycManager.startPersonaIdentification(activity)
         }
     }
-    fun selectNft(){
+
+    fun selectNft() {
         viewModelScope.launch {
-            selectedImage=kycManager.selectAndPrepareForNFTMinting(activity)
+            selectedImage = kycManager.selectAndPrepareForNFTMinting(activity)
             Timber.d("Selected image is: $selectedImage")
         }
     }
-    fun mintNft(){
+
+    fun mintNft() {
         viewModelScope.launch {
             kycManager.mint {
-                myWalletSession?.let { session->
+                myWalletSession?.let { session ->
                     val choosenWallet =
                         session.getAvailableWallets()?.first() ?: throw Exception("No wallet")
-                    session.sendMintingTransaction(choosenWallet,it)
+                    session.sendMintingTransaction(choosenWallet, it)
                 }
             }
         }

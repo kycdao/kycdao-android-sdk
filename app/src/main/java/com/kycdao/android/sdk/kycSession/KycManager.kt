@@ -28,11 +28,26 @@ import timber.log.Timber
 import java.math.BigInteger
 import kotlin.Exception
 
+/**
+ * A class responsible for managing the kycSession
+ */
 class KycManager() : KoinComponent {
     private val networkDatasource: NetworkDatasource =
         KoinJavaComponent.get<NetworkDatasource>(NetworkDatasource::class.java)
-    private val web3j : Web3j by inject()
+    private val web3j: Web3j by inject()
     lateinit var kycSession: KycSession
+    val updateUserUseCase: UpdateUserUseCase by inject()
+
+    /**
+     * Creates a kycSession that will be used by the KycManager
+     *
+     * Must be called first to ensure that KycManager has access to a session
+     *
+     * @param walletAddress The wallet address which will be linked to the kycSession
+     * @param walletSession An implementation of the WalletSession interface used to access the wallet of the user
+     *
+     * @return The created kycSession
+     */
     suspend fun createSession(walletAddress: String, walletSession: WalletSession): KycSession {
         val networks = fetchSupportedNetworks()
         val desiredNetwork = networks.find { network ->
@@ -68,22 +83,34 @@ class KycManager() : KoinComponent {
         return kycSession
     }
 
+    /**
+     * Logs in
+     *
+     * @param signature Personal signed signature created by WalletSession.personalSign()
+     *
+     * @return Returns whether the login was successful or not
+     */
     suspend fun login(signature: String): Boolean {
-        kycSession.let { mySession ->
-            //Not yet logged in
-            if (mySession.sessionData.user.id == null) {
-                Timber.d("---------- Input ----------")
-                Timber.e("signature: $signature")
-                val userDto = networkDatasource.login(LoginRequestBody(signature))
-                Timber.d("---------- Output ----------")
-                Timber.e("userDto: $userDto")
-                mySession.sessionData.user = userDto.mapToKycUser()
-            }
-            return true
+        // TODO handle network error
+        if (kycSession.sessionData.user.id == null) {
+            Timber.d("---------- Input ----------")
+            Timber.e("signature: $signature")
+            val userDto = networkDatasource.login(LoginRequestBody(signature))
+            Timber.d("---------- Output ----------")
+            Timber.e("userDto: $userDto")
+            kycSession.sessionData.user = userDto.mapToKycUser()
         }
+        return true
     }
 
-    val updateUserUseCase: UpdateUserUseCase by inject()
+    /**
+     * Save the personal information of the user and sends confirmation email if email is not yet confirmed.
+     *
+     * By calling this function the disclaimer is also accepted.
+     * The function finishes when the email is confirmed
+     *
+     * @param personalDataResult The personal information to be saved wrapped in a PersonalDataResult class
+     */
     suspend fun savePersonalInfo(personalDataResult: PersonalDataResult) {
         kycSession.let { mySession ->
             mySession.sessionData.user.apply {
@@ -107,16 +134,25 @@ class KycManager() : KoinComponent {
     val selectNftSelectionUseCase: NftSelectionUseCase by inject()
     private var emailPollJob: Job? = null
     private var verificationPollJob: Job? = null
-    fun pollEmailConfirmed() {
+    private fun pollEmailConfirmed() {
         emailPollJob?.cancel()
         emailPollJob = pollEmailUseCase(kycSession.sessionData.user)
     }
 
-    fun pollVerificationCompleted() {
+    private fun pollVerificationCompleted() {
         verificationPollJob?.cancel()
         verificationPollJob = pollIdentityVerificationRequestUseCase(kycSession)
     }
 
+    /**
+     * Launches the predefined NftSelector activity on which, and returns with the id of the selectedImage
+     *
+     * Returns after the minting of the selectedNft has been authorized
+     *
+     * @param activity Activity that launches the new NftSelectorActivity
+     *
+     * @return selectedImage Id
+     */
     suspend fun selectAndPrepareForNFTMinting(activity: ComponentActivity): String? {
         val selected = selectNftSelectionUseCase(kycSession, activity)
         Timber.d("Selected Nft Image: $selected")
@@ -126,18 +162,26 @@ class KycManager() : KoinComponent {
         }
         return selected
     }
+
     private fun getTransactionReceipt(txHash: String): EthGetTransactionReceipt {
         return web3j.ethGetTransactionReceipt(txHash).sendAsync().get()
     }
-    private suspend fun continueWhenTransactionFinished(txHash: String) : EthGetTransactionReceipt{
+    suspend fun testSuspend(){
         while(true){
+            Timber.d("Test suspend")
+            delay(3.seconds)
+
+        }
+    }
+    private suspend fun continueWhenTransactionFinished(txHash: String): EthGetTransactionReceipt {
+        while (true) {
             delay(5.seconds)
             Timber.d("checking if transaction finsihed")
             val receipt = getTransactionReceipt(txHash)
-            if(receipt.transactionReceipt.isPresent){
+            if (receipt.transactionReceipt.isPresent) {
                 val transactionReceipt = receipt.transactionReceipt.get()
                 val success = transactionReceipt.status == "0x1"
-                if(!success) {
+                if (!success) {
                     throw Exception("Couldn't get receipt")
                 }
                 Timber.d("Transaction finished")
@@ -145,8 +189,15 @@ class KycManager() : KoinComponent {
             }
         }
     }
+
+    /**
+     * Performs a minting operation
+     *
+     * @param performTransaction Lambda function which contains the actual minting call, using the WalletSession interface
+     */
     suspend fun mint(performTransaction: suspend (MintingProperties) -> MintingTransactionResult?) {
-        val authCode = kycSession.authorizeMintingResponse?.code ?: throw Exception("No auth code found")
+        val authCode =
+            kycSession.authorizeMintingResponse?.code ?: throw Exception("No auth code found")
         val mintingFunction = MintFunction(authCode)
         val transactionProperties = createMintingPropertiesFor(mintingFunction)
         val result = performTransaction(transactionProperties) ?: throw Exception("Failed to mint")
@@ -155,11 +206,12 @@ class KycManager() : KoinComponent {
 
         val tokenId = receipt.transactionReceipt.get().logs[0].topics[3]
         val decimalTokenId = tokenId.convertBigInteger().toString(10)
-        tokenMinted(authCode,decimalTokenId,result.txHash)
+        tokenMinted(authCode, decimalTokenId, result.txHash)
 
         kycSession.authorizeMintingResponse = null
     }
-    private suspend fun tokenMinted(authCode :String, tokenId: String, txHash: String){
+
+    private suspend fun tokenMinted(authCode: String, tokenId: String, txHash: String) {
         val mintTokenBody = MintTokenBody(
             authorization_code = authCode,
             token_id = tokenId,
@@ -167,7 +219,8 @@ class KycManager() : KoinComponent {
         )
         networkDatasource.sendMintToken(mintTokenBody)
     }
-    private fun createMintingPropertiesFor(function: Function): MintingProperties{
+
+    private fun createMintingPropertiesFor(function: Function): MintingProperties {
         val gasPrice = calculateGasPrice(function)
         val resolvedContractAddress = kycSession.kycConfig?.address ?: throw Exception()
         return MintingProperties(
@@ -178,26 +231,26 @@ class KycManager() : KoinComponent {
         )
     }
 
-    private fun calculateGasPrice(function : Function) : GasPriceEstimation{
+    private fun calculateGasPrice(function: Function): GasPriceEstimation {
         return GasPriceEstimation(
             amount = estimateGasUse(function),
-            price =getGasPrice(),
+            price = getGasPrice(),
             currency = kycSession.network.native_currency
         )
     }
 
-    private fun getGasPrice() : BigInteger{
+    private fun getGasPrice(): BigInteger {
         val ethGasPrice = web3j.ethGasPrice().sendAsync().get()
         if (ethGasPrice.error != null) {
-            Timber.d( "error.code: ${ethGasPrice.error?.code}")
-            Timber.d( "error.data: ${ethGasPrice.error?.data}")
-            Timber.d( "error.message: ${ethGasPrice.error?.message}")
+            Timber.d("error.code: ${ethGasPrice.error?.code}")
+            Timber.d("error.data: ${ethGasPrice.error?.data}")
+            Timber.d("error.message: ${ethGasPrice.error?.message}")
             // TODO error
         }
         return ethGasPrice.gasPrice
     }
 
-    private fun estimateGasUse(function: Function) : BigInteger{
+    private fun estimateGasUse(function: Function): BigInteger {
         val transaction = Transaction.createFunctionCallTransaction(
             kycSession.walletAddress,
             null,
@@ -207,16 +260,22 @@ class KycManager() : KoinComponent {
             FunctionEncoder.encode(function)
         )
         val ethEstimateGas = web3j.ethEstimateGas(transaction).sendAsync().get()
-        if(ethEstimateGas.error != null){
-            Timber.d( "error.code: ${ethEstimateGas.error?.code}")
-            Timber.d( "error.data: ${ethEstimateGas.error?.data}")
-            Timber.d( "error.message: ${ethEstimateGas.error?.message}")
+        if (ethEstimateGas.error != null) {
+            Timber.d("error.code: ${ethEstimateGas.error?.code}")
+            Timber.d("error.data: ${ethEstimateGas.error?.data}")
+            Timber.d("error.message: ${ethEstimateGas.error?.message}")
             // TODO handle error
         }
         return ethEstimateGas.amountUsed
     }
 
     val identityVerificationUseCase: IdentityVerificationUseCase by inject()
+
+    /**
+     * Starts the persona identification process.
+     *
+     * @param activity The activity that starts the new activity containing the persona process
+     */
     fun startPersonaIdentification(activity: ComponentActivity) {
         identityVerificationUseCase(kycSession, activity) {
             pollVerificationCompleted()
@@ -224,8 +283,7 @@ class KycManager() : KoinComponent {
         }
     }
 
-    val authorizeMintingGetTransactionReceiptUseCase: AuthorizeMintingGetTransactionReceiptUseCase by inject()
-    suspend fun checkAuthorizeMinting() {
+    private suspend fun checkAuthorizeMinting() {
         val mintingTxHash = kycSession.authorizeMintingResponse?.tx_hash ?: throw Exception()
         continueWhenTransactionFinished(mintingTxHash)
     }
