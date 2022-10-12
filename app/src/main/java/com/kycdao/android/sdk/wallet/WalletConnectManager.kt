@@ -24,7 +24,6 @@ import java.util.*
  */
 object WalletConnectManager : CustomKoinComponent() {
     private var wcSession : WalletSessionDefaultImpl? = null
-
     private val moshi : Moshi by inject()
     private val storage : WCSessionStore by inject()
     private val client : OkHttpClient by inject(qualifier = named("WalletConnectClient"))
@@ -67,18 +66,23 @@ object WalletConnectManager : CustomKoinComponent() {
     }
 
     /**
-     * Connects to a wallet via WalletConnect
+     * Sets a callback to run when a connection with a wallet is successfully established
      *
-     * @param onConnectionEstablished A callback function called when a connection was successfully established between the wallet and the client.
+     * @param onConnectionEstablished A callback function to run when a connection was successfully established between the wallet and the client.
      */
-    fun connectWallet(onConnectionEstablished : (WalletSession)->Unit){
-        wcSession = createWCSession()
-        wcSession?.let {session ->
-            WalletIntent.executeFromUri(session.wcConfig.toWCUri())
-        }
+    fun subscribeOnConnectionEstablished(onConnectionEstablished : (WalletSession)->Unit){
         wcSession?.addListenerOnEstablished { walletSession ->
             Timber.d( "wallet connect approved")
             onConnectionEstablished(walletSession)
+        }
+    }
+    /**
+     * Starts connection process to a wallet via WalletConnect
+     */
+    fun connectWallet(){
+        wcSession = createWCSession()
+        wcSession?.let {session ->
+            WalletIntent.executeFromUri(session.wcConfig.toWCUri())
         }
     }
 }
