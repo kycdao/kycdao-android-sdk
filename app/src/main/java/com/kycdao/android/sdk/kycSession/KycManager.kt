@@ -39,6 +39,9 @@ class KycManager() : CustomKoinComponent() {
     private val web3j: Web3j by inject()
     lateinit var kycSession: KycSession
     val updateUserUseCase: UpdateUserUseCase by inject()
+    val pollEmailUseCase: PollEmailConfirmedUseCase by inject()
+    val pollIdentityVerificationRequestUseCase: PollIdentityVerificationRequestUseCase by inject()
+    val identityVerificationUseCase: IdentityVerificationUseCase by inject()
 
     /**
      * Creates a kycSession that will be used by the KycManager
@@ -131,8 +134,7 @@ class KycManager() : CustomKoinComponent() {
         pollEmailConfirmed()
     }
 
-    val pollEmailUseCase: PollEmailConfirmedUseCase by inject()
-    val pollIdentityVerificationRequestUseCase: PollIdentityVerificationRequestUseCase by inject()
+
     private var emailPollJob: Job? = null
     private var verificationPollJob: Job? = null
     private fun pollEmailConfirmed() {
@@ -154,7 +156,6 @@ class KycManager() : CustomKoinComponent() {
      *
      * @return selectedImage Id
      */
-
     suspend fun prepareForMintingOfNFT(selectedImage: String) {
         Timber.d("Selected Nft Image: $selectedImage")
         authorizeMintingOfNFT(selectedImage)
@@ -269,7 +270,6 @@ class KycManager() : CustomKoinComponent() {
         return ethEstimateGas.amountUsed
     }
 
-    val identityVerificationUseCase: IdentityVerificationUseCase by inject()
 
     /**
      * Starts the persona identification process.
@@ -307,7 +307,6 @@ class KycManager() : CustomKoinComponent() {
         Timber.d( "authorizeMintingResponse: $authorizeMintingResponse")
 
         kycSession.authorizeMintingResponse = authorizeMintingResponse
-
     }
 
     private suspend fun fetchSupportedNetworks(): List<Network> {
