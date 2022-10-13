@@ -7,7 +7,7 @@
 
     <application
         android:allowBackup="true"
-        android:usesCleartextTraffic="false">
+        android:usesCleartextTraffic="true">
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"

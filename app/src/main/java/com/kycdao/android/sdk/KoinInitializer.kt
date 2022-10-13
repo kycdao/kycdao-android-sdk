@@ -17,7 +17,7 @@ import timber.log.Timber
 object MyKoinContext{
     var koinApp: KoinApplication?= null
 }
-abstract class CustomKoinComponent : KoinComponent {
+open class CustomKoinComponent : KoinComponent {
     // Override default Koin instance, initially target on GlobalContext to yours
     override fun getKoin(): Koin = MyKoinContext.koinApp?.koin!!
 }
