@@ -127,10 +127,9 @@ data class KycSession(
 			isLegalEntity = personalData.isLegalEntity
 		}
 		updateUserPersonalData()
-		if (!emailConfirmed) {
-			sendConfirmationEmail()
-		}
+		sendConfirmationEmail()
 	}
+
 
 	/**
 	 * Launches the predefined NftSelector activity on which, and returns with the id of the selectedImage
@@ -245,12 +244,14 @@ data class KycSession(
 		continueWhenTransactionFinished(mintingTxHash)
 	}
 
-	private suspend fun sendConfirmationEmail() {
-		Timber.d("Confirmation email sent")
-		networkDatasource.sendEmailConfirm()
+	suspend fun sendConfirmationEmail() {
+		if (!emailConfirmed) {
+			Timber.d("Confirmation email sent")
+			networkDatasource.sendEmailConfirm()
+		}
 	}
 
-	suspend fun refreshUser() {
+	private suspend fun refreshUser() {
 		val updatedUser = networkDatasource.getUser().mapToKycUser()
 		sessionData.user = updatedUser
 	}
