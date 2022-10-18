@@ -4,6 +4,8 @@ import com.kycdao.android.sdk.model.MintingProperties
 import com.kycdao.android.sdk.model.MintingTransactionResult
 
 interface WalletSession {
+
+    val id: String
     /**
      * Returns a list of all available wallets
      */

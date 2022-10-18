@@ -39,11 +39,11 @@ afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
-                 from components.release
+                from components.release
 
                 groupId = 'com.github.kycDao'
                 artifactId = 'kycDao-android'
-                version = '0.16'
+                version = '0.21'
             }
         }
         repositories {

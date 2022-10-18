@@ -2,25 +2,32 @@ package com.kycdao.android.sdk.wallet
 
 import com.kycdao.android.sdk.model.MintingProperties
 import com.kycdao.android.sdk.model.MintingTransactionResult
+import com.kycdao.android.sdk.model.WalletConnectURL
 import org.komputing.khex.extensions.toHexString
 import com.kycdao.android.sdk.walletconnect.Session
 import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-private typealias FunctionWithSession = (WalletSession) -> Unit
+private typealias FunctionWithSession = (WalletConnectSession) -> Unit
 
-class WalletSessionDefaultImpl(
+class WalletConnectSession(
     val wcSession: Session,
     val wcConfig: Session.Config
 ) : WalletSession {
+    val url = WalletConnectURL(
+        topic = wcConfig.handshakeTopic,
+        bridgeURL = wcConfig.bridge ?: throw Exception("Missing bridge"),
+        key = wcConfig.key ?: throw Exception("Missing key"),
+        absoluteUri = wcConfig.toWCUri()
+    )
 
     fun addListenerOnEstablished(approvedCallback: FunctionWithSession) {
         wcSession.addCallback(object : Session.Callback {
             override fun onStatus(status: Session.Status) {
                 Timber.d("onStatus: $status")
                 if (status == Session.Status.Approved) {
-                    approvedCallback.invoke(this@WalletSessionDefaultImpl)
+                    approvedCallback.invoke(this@WalletConnectSession)
                 }
             }
 
@@ -28,6 +35,11 @@ class WalletSessionDefaultImpl(
             }
         })
     }
+
+    override val id: String = url.absoluteUri
+    val accounts get() =wcSession.approvedAccounts()
+    val icons get()= wcSession.peerMeta()?.icons
+    val name get()= wcSession.peerMeta()?.name
 
     override fun getAvailableWallets(): List<String>? {
         return wcSession.approvedAccounts()
@@ -39,9 +51,6 @@ class WalletSessionDefaultImpl(
         return chainId
     }
 
-    /**
-     * Valami komment
-     */
     override suspend fun personalSign(walletAddress: String, message: String): String =
         suspendCoroutine { continuation ->
             val messageHex = message.toByteArray(Charsets.UTF_8).toHexString()

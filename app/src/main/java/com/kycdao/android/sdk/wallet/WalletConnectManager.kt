@@ -23,7 +23,7 @@ import java.util.*
  *
  */
 object WalletConnectManager : CustomKoinComponent() {
-    private var wcSession : WalletSessionDefaultImpl? = null
+    private var wcSession : WalletConnectSession? = null
     private val moshi : Moshi by inject()
     private val storage : WCSessionStore by inject()
     private val client : OkHttpClient by inject(qualifier = named("WalletConnectClient"))
@@ -32,7 +32,7 @@ object WalletConnectManager : CustomKoinComponent() {
         bridge.start()
     }
 
-    private fun createWCSession() : WalletSessionDefaultImpl{
+    private fun createWCSession() : WalletConnectSession{
         Timber.d( "create wallet connect session")
         wcSession?.wcSession?.clearCallbacks()
         val key = ByteArray(32).also { Random().nextBytes(it) }.toNoPrefixHexString()
@@ -49,7 +49,7 @@ object WalletConnectManager : CustomKoinComponent() {
         ).also {
             it.offer()
         }
-        val wcSession = WalletSessionDefaultImpl(session, config)
+        val wcSession = WalletConnectSession(session, config)
         Timber.d( "---------- Output ----------")
         Timber.d( "wcSession: $wcSession")
         return wcSession
@@ -70,7 +70,7 @@ object WalletConnectManager : CustomKoinComponent() {
      *
      * @param onConnectionEstablished A callback function to run when a connection was successfully established between the wallet and the client.
      */
-    fun subscribeOnConnectionEstablished(onConnectionEstablished : (WalletSession)->Unit){
+    fun subscribeOnConnectionEstablished(onConnectionEstablished : (WalletConnectSession)->Unit){
         wcSession = createWCSession()
         wcSession?.addListenerOnEstablished { walletSession ->
             Timber.d( "wallet connect approved")

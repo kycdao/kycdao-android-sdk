@@ -8,7 +8,6 @@ import com.kycdao.android.sdk.model.Network
 import retrofit2.http.*
 
 interface APIService {
-
     @POST("session")
     suspend fun createSession(
         @Body body: CreateSessionRequestBody,

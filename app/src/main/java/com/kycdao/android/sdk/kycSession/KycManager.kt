@@ -1,36 +1,12 @@
 package com.kycdao.android.sdk.kycSession
 
 
-import androidx.activity.ComponentActivity
-import com.kycdao.android.sdk.CustomKoinComponent
-import com.kycdao.android.sdk.KoinContainer
 import com.kycdao.android.sdk.KoinContainer.networkDatasource
-import com.kycdao.android.sdk.dto.AuthorizeMintingResponse
 import com.kycdao.android.sdk.dto.SmartContractConfigDto
 import com.kycdao.android.sdk.dto.toModel
 import com.kycdao.android.sdk.model.*
-import com.kycdao.android.sdk.network.NetworkDatasource
-import com.kycdao.android.sdk.network.api.AuthorizeMintingRequestBody
 import com.kycdao.android.sdk.network.api.CreateSessionRequestBody
-import com.kycdao.android.sdk.network.api.LoginRequestBody
-import com.kycdao.android.sdk.network.api.MintTokenBody
-import com.kycdao.android.sdk.usecase.*
-import com.kycdao.android.sdk.util.asHexString
-import com.kycdao.android.sdk.util.convertBigInteger
-import com.kycdao.android.sdk.util.seconds
 import com.kycdao.android.sdk.wallet.WalletSession
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.java.KoinJavaComponent
-import org.web3j.abi.FunctionEncoder
-import org.web3j.abi.datatypes.Function
-import org.web3j.protocol.Web3j
-import org.web3j.protocol.core.methods.request.Transaction
-import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt
-import timber.log.Timber
-import java.math.BigInteger
 import kotlin.Exception
 
 /**
@@ -77,7 +53,7 @@ object KycManager {
             accreditedConfig = accreditedContractConfig?.toModel(),
             sessionData = sessionData,
             personaData = status.persona.toModel(),
-            walletConnection = walletSession
+            walletSession = walletSession
         )
     }
 
