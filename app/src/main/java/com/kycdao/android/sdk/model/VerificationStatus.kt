@@ -1,7 +1,7 @@
 package com.kycdao.android.sdk.model
 
 enum class VerificationStatus {
-	Verified, Processing, NotVerified
+	VERIFIED, PROCESSING, NOT_VERIFIED
 }
 
 
@@ -10,9 +10,9 @@ enum class VerificationStatusDto {
 
 	fun mapToModel(): VerificationStatus {
 		return when (this) {
-			Verified -> VerificationStatus.Verified
-			Created, InReview -> VerificationStatus.Processing
-			Failed, NotVerified -> VerificationStatus.NotVerified
+			Verified -> VerificationStatus.VERIFIED
+			InReview -> VerificationStatus.PROCESSING
+			Failed, NotVerified, Created -> VerificationStatus.NOT_VERIFIED
 		}
 	}
 }

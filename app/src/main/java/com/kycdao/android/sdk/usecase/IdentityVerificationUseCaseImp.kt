@@ -6,6 +6,8 @@ import com.withpersona.sdk2.inquiry.Environment
 import com.withpersona.sdk2.inquiry.Inquiry
 import com.withpersona.sdk2.inquiry.InquiryResponse
 import timber.log.Timber
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.resume
 
 class IdentityVerificationUseCaseImp() : IdentityVerificationUseCase {
 
@@ -13,25 +15,11 @@ class IdentityVerificationUseCaseImp() : IdentityVerificationUseCase {
 		templateId: String,
 		referenceID: String,
 		activity: ComponentActivity,
-		onCompleted: ((InquiryResponse.Complete) -> Unit)?
+		resultContinuation: Continuation<InquiryResponse>
 	) {
 
 		startPersona(activity, templateId, referenceID) { result ->
-			when (result) {
-				is InquiryResponse.Complete -> {
-					onCompleted?.invoke(result)
-					// ... completed flow
-					Timber.d("Complete")
-				}
-				is InquiryResponse.Cancel -> {
-					// ... abandoned flow
-					Timber.d("Cancel")
-				}
-				is InquiryResponse.Error -> {
-					// ... something went wrong
-					Timber.d("Error")
-				}
-			}
+			resultContinuation.resume(result)
 		}
 	}
 
@@ -57,4 +45,5 @@ class IdentityVerificationUseCaseImp() : IdentityVerificationUseCase {
 
 		getInquiryResult.launch(inquiry)
 	}
+
 }

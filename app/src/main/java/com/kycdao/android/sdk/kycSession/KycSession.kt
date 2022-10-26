@@ -8,6 +8,8 @@ import com.kycdao.android.sdk.KoinContainer.networkDatasource
 import com.kycdao.android.sdk.KoinContainer.web3j
 import com.kycdao.android.sdk.dto.AuthorizeMintingResponse
 import com.kycdao.android.sdk.model.*
+import com.kycdao.android.sdk.model.functions.mint.MintFunction
+import com.kycdao.android.sdk.model.functions.mint.MintingProperties
 import com.kycdao.android.sdk.network.api.AuthorizeMintingRequestBody
 import com.kycdao.android.sdk.network.api.LoginRequestBody
 import com.kycdao.android.sdk.network.api.MintTokenBody
@@ -16,6 +18,7 @@ import com.kycdao.android.sdk.util.asHexString
 import com.kycdao.android.sdk.util.convertBigInteger
 import com.kycdao.android.sdk.util.seconds
 import com.kycdao.android.sdk.wallet.WalletSession
+import com.withpersona.sdk2.inquiry.InquiryResponse
 import kotlinx.coroutines.*
 import org.web3j.abi.FunctionEncoder
 import org.web3j.abi.datatypes.Function
@@ -24,17 +27,27 @@ import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt
 import timber.log.Timber
 import java.math.BigInteger
 import java.util.*
+import kotlin.coroutines.suspendCoroutine
 
+/***
+ * A KYC session object which contains session related data and session related operations
+ *
+ * An instance should be created by calling the KycManager-s createSession function.
+ */
 data class KycSession(
+	/***
+	 * 	Wallet address used to create the session
+	 */
 	val walletAddress: String,
 	private val network: Network,
 	private val kycConfig: SmartContractConfig?,
 	private val accreditedConfig: SmartContractConfig?,
-	val personaData: Persona,
+	private val personaData: Persona,
 	private val sessionData: SessionData,
+	/***
+	 * The wallet session associated with this KYCSession, used to communicate with a wallet
+	 */
 	val walletSession: WalletSession,
-	val walletConnected: Boolean = false,
-	val signature: String? = null,
 	private var authorizeMintingResponse: AuthorizeMintingResponse? = null,
 ) {
 
@@ -46,24 +59,48 @@ data class KycSession(
 	private var scope = CoroutineScope(Dispatchers.IO)
 
 	val id: String = UUID.randomUUID().toString()
+
 	val chainId: String
 		get() = network.caip2id
+
+	/***
+	 * Represents whether the disclaimer has been accepted or not.
+	 */
 	val disclaimerAccepted: Boolean
 		get() = sessionData.user.disclaimerAccepted?.isNotEmpty() ?: false
+
+	/***
+	 * Represents whether the email address associated with the session has been confirmed or not.
+	 */
 	val emailConfirmed: Boolean
 		get() = sessionData.user.isEmailConfirmed()
+
+	/***
+	 * Whether the user is logged in or not.
+	 */
 	val loggedIn: Boolean
 		get() = sessionData.user.id != null
 	private val residencyProvided: Boolean
 		get() = sessionData.user.residency?.isNotEmpty() ?: false
 	private val emailProvided: Boolean
 		get() = sessionData.user.email?.isNotEmpty() ?: false
+
+	/***
+	 * A value representing whether all the necessary information has been provided or not.
+	 * The necessary informations include the following:
+	 * Both residency information and email address has been provided and we know if the user is a legal entity or not.
+	 */
 	val requiredInformationProvided: Boolean
 		get() = residencyProvided && emailProvided && sessionData.user.isLegalEntity != null
-//	val verificationStatus: VerificationStatus
-//		get() = sessionData.user.verificationStatus
 
+	/***
+	 * The verification status of the user
+	 */
+	val verificationStatus: VerificationStatus
+		get() = sessionData.user.verificationStatus()
 
+	private var emailPollJob: Job? = null
+	private var verificationPollJob: Job? = null
 	/*fun getState(): State {
 		return when {
 			!walletConnected() -> State.CONNECT_WALLET
@@ -87,17 +124,18 @@ data class KycSession(
 		return "kycDAO-login-${sessionData.nonce}"
 	}
 
+	/***
+	 * Provides the user selectable NFT images
+	 * @return A list of image related data
+	 */
 	fun getNFTImages(): List<TokenImage> {
 		return sessionData.user.availableImages.filter { it.imageType == ImageType.Identicon }
 	}
 
 
 	/**
-	 * Logs in
-	 *
-	 * @param signature Personal signed signature created by WalletSession.personalSign()
-	 *
-	 * @return Returns whether the login was successful or not
+	 * Logs in the user to the current session
+	 * The user will be redirected to their wallet, where they have to sign a session data in order to login
 	 */
 	suspend fun login() {
 		// TODO handle network error
@@ -113,12 +151,10 @@ data class KycSession(
 	}
 
 	/**
-	 * Save the personal information of the user and sends confirmation email if email is not yet confirmed.
+	 * Save the personal information of the user.
+	 * If the provided email address is not yet confirmed then a confirmation email will be sent.
 	 *
-	 * By calling this function the disclaimer is also accepted.
-	 * The function finishes when the email is confirmed
-	 *
-	 * @param personalData The personal information to be saved wrapped in a PersonalDataResult class
+	 * @param personalData The personal information required, wrapped in a [PersonalData] class
 	 */
 	suspend fun setPersonalData(personalData: PersonalData) {
 		sessionData.user.apply {
@@ -130,15 +166,13 @@ data class KycSession(
 		sendConfirmationEmail()
 	}
 
-
 	/**
-	 * Launches the predefined NftSelector activity on which, and returns with the id of the selectedImage
+	 * Authorizes the minting process for a selected NFT image
+	 * Returns after the minting of the selected NFT has been authorized
 	 *
-	 * Returns after the minting of the selectedNft has been authorized
+	 * The list of available images can be acquired by calling the [getNFTImages] function.
 	 *
-	 * @param activity Activity that launches the new NftSelectorActivity
-	 *
-	 * @return selectedImage Id
+	 * @param selectedImage the ID of the NFT image that is about to be minted
 	 */
 	suspend fun requestMinting(selectedImage: String) {
 		Timber.d("Selected Nft Image: $selectedImage")
@@ -147,7 +181,11 @@ data class KycSession(
 	}
 
 	/**
-	 * Performs a minting operation
+	 * Mints the previously chosen NFT image
+	 *
+	 * This method can only be called successfully after the user was [authorized][requestMinting] for minting with a selected image
+	 *
+	 * @return An URL for an explorer where the minting transaction can be viewed
 	 *
 	 * @param performTransaction Lambda function which contains the actual minting call, using the WalletSession interface
 	 */
@@ -155,6 +193,7 @@ data class KycSession(
 		val authCode =
 			authorizeMintingResponse?.code ?: throw Exception("No auth code found")
 		val mintingFunction = MintFunction(authCode)
+
 		val transactionProperties = createMintingPropertiesFor(mintingFunction)
 		val result = walletSession.sendMintingTransaction(walletAddress, transactionProperties)
 		Timber.d("Receipt hash: ${result.txHash}")
@@ -174,38 +213,98 @@ data class KycSession(
 		}
 	}
 
+	suspend fun checkHasValidToken(verificationType: VerificationType): Boolean {
+		val contractConfig = when (verificationType) {
+			VerificationType.KYC -> kycConfig
+			VerificationType.AccreditedInvestor -> accreditedConfig
+		} ?: throw Exception("No contract config found")
+		return walletSession.hasValidToken(
+			walletAddress,
+			contractConfig
+		)
+	}
+
 	/**
-	 * Starts the persona identification process.
+	 * Starts the identity verification process.
 	 *
 	 * @param activity The activity that starts the new activity containing the persona process
+	 *
+	 * @return The result of the identity verification flow. It only tells whether the user completed the identity flow or cancelled it. Information regarding the validity of the identity verification can be accessed at [verificationStatus]
+	 * @see resumeOnVerificationCompleted
 	 */
-	fun startIdentification(activity: ComponentActivity) {
+	suspend fun startIdentification(activity: ComponentActivity): IdentityFlowResult {
 		val templateID = personaData.templateID
 		val referenceID = sessionData.user.extId
-		identityVerificationUseCase(
-			referenceID = referenceID, templateId = templateID, activity = activity
-		) {
-			resumeOnVerificationCompleted()
-			Timber.d("verification Finished")
+
+		val identificationResult = suspendCoroutine<InquiryResponse> { continuation ->
+			identityVerificationUseCase(
+				referenceID = referenceID,
+				templateId = templateID,
+				activity = activity,
+				resultContinuation = continuation
+			)
+		}
+		return when (identificationResult) {
+			is InquiryResponse.Complete -> IdentityFlowResult.COMPLETED
+			is InquiryResponse.Cancel -> IdentityFlowResult.CANCELLED
+			is InquiryResponse.Error -> throw Exception("Failed persona identification")
+		}
+
+	}
+
+	/***
+	 * Accepts the disclaimer if the disclaimer hasn't benn accepted before.
+	 */
+	suspend fun acceptDisclaimer() {
+		if (!disclaimerAccepted) {
+			Timber.d("sending disclaimer acceptance")
+			networkDatasource.saveDisclaimer()
+			refreshUser()
+		} else {
+			Timber.d("disclaimer acceptance has already been sent before")
 		}
 	}
 
 	private fun createMintingPropertiesFor(function: Function): MintingProperties {
-		val gasPrice = calculateGasPrice(function)
+		val gasPrice = calculateGasPriceFor(function)
 		val resolvedContractAddress = kycConfig?.address ?: throw Exception()
 		return MintingProperties(
 			contractAddress = resolvedContractAddress,
 			contractABI = FunctionEncoder.encode(function),
 			gasAmount = gasPrice.amount.asHexString(),
-			gasPrice = gasPrice.finalGasPrice.asHexString(),
+			gasPrice = gasPrice.price.asHexString(),
 		)
 	}
 
-	private fun calculateGasPrice(function: Function): GasPriceEstimation {
-		return GasPriceEstimation(
+	/***
+	 * Creates an estimation for the gas fees during minting
+	 *
+	 * @return The gas fee estimation wrapped in [GasEstimation]
+	 */
+	fun estimateGasForMinting(): GasEstimation {
+		val authCode =
+			authorizeMintingResponse?.code ?: throw Exception("No auth code found")
+		val mintingFunction = MintFunction(authCode)
+		return calculateGasPriceFor(mintingFunction)
+	}
+
+	/***
+	 * Sends a confirmation email to the [provided][setPersonalData] email address if the address in question has not been confirmed previously
+	 *
+	 * @see resumeOnEmailConfirmed
+	 */
+	suspend fun sendConfirmationEmail() {
+		if (!emailConfirmed) {
+			Timber.d("Confirmation email sent")
+			networkDatasource.sendEmailConfirm()
+		}
+	}
+
+	private fun calculateGasPriceFor(function: Function): GasEstimation {
+		return GasEstimation.estimate(
 			amount = estimateGasUse(function),
 			price = getGasPrice(),
-			currency = network.native_currency
+			gasCurrency = network.native_currency
 		)
 	}
 
@@ -244,13 +343,6 @@ data class KycSession(
 		continueWhenTransactionFinished(mintingTxHash)
 	}
 
-	suspend fun sendConfirmationEmail() {
-		if (!emailConfirmed) {
-			Timber.d("Confirmation email sent")
-			networkDatasource.sendEmailConfirm()
-		}
-	}
-
 	private suspend fun refreshUser() {
 		val updatedUser = networkDatasource.getUser().mapToKycUser()
 		sessionData.user = updatedUser
@@ -272,19 +364,13 @@ data class KycSession(
 		}
 	}
 
-	suspend fun acceptDisclaimer() {
-		if (!disclaimerAccepted) {
-			Timber.d("sending disclaimer acceptance")
-			networkDatasource.saveDisclaimer()
-			refreshUser()
-		} else {
-			Timber.d("disclaimer acceptance has already been sent before")
-		}
-	}
 
-	private var emailPollJob: Job? = null
-	private var verificationPollJob: Job? = null
-	fun resumeOnEmailConfirmed() {
+	/***
+	 * Starts polling the backend and suspends until the email is confirmed.
+	 *
+	 * @see sendConfirmationEmail
+	 */
+	suspend fun resumeOnEmailConfirmed() {
 		emailPollJob?.cancel()
 		emailPollJob = scope.launch {
 			while (true) {
@@ -299,9 +385,15 @@ data class KycSession(
 				}
 			}
 		}
+		emailPollJob?.join()
 	}
 
-	fun resumeOnVerificationCompleted() {
+	/***
+	 * Starts polling the backend and suspends until the identity verification result is available.
+	 *
+	 * @see startIdentification
+	 */
+	suspend fun resumeOnVerificationCompleted() {
 		verificationPollJob?.cancel()
 		verificationPollJob = scope.launch {
 			while (true) {
@@ -315,6 +407,7 @@ data class KycSession(
 				}
 			}
 		}
+		verificationPollJob?.join()
 	}
 
 

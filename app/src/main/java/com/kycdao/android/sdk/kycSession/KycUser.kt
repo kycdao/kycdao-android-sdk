@@ -17,7 +17,30 @@ data class KycUser(
 ) : Serializable {
 	fun isIdentityVerified(): Boolean {
 		return verificationRequests.any {
-			it.verificationType == VerificationType.KYC && it.status == VerificationStatus.Verified
+			it.verificationType == VerificationType.KYC && it.status == VerificationStatus.VERIFIED
+		}
+	}
+
+	fun verificationStatus(): VerificationStatus {
+		val statuses = verificationRequests.map {
+			if (it.verificationType == VerificationType.KYC) {
+				VerificationStatus.NOT_VERIFIED
+			}
+			it.status
+		}
+		return when {
+			statuses.isEmpty() -> {
+				VerificationStatus.NOT_VERIFIED
+			}
+			statuses.contains(VerificationStatus.VERIFIED) -> {
+				VerificationStatus.VERIFIED
+			}
+			statuses.contains(VerificationStatus.PROCESSING) -> {
+				VerificationStatus.PROCESSING
+			}
+			else -> {
+				VerificationStatus.NOT_VERIFIED
+			}
 		}
 	}
 
