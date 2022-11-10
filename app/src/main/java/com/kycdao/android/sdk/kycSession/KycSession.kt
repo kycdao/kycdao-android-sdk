@@ -3,17 +3,22 @@ package com.kycdao.android.sdk.kycSession
 import android.net.Uri
 import android.webkit.URLUtil
 import androidx.activity.ComponentActivity
+import com.bitraptors.networking.api.models.NetworkErrorResponse
 import com.kycdao.android.sdk.KoinContainer.identityVerificationUseCase
 import com.kycdao.android.sdk.KoinContainer.networkDatasource
 import com.kycdao.android.sdk.KoinContainer.web3j
 import com.kycdao.android.sdk.dto.AuthorizeMintingResponse
+import com.kycdao.android.sdk.dto.UserDto
+import com.kycdao.android.sdk.exceptions.*
 import com.kycdao.android.sdk.model.*
 import com.kycdao.android.sdk.model.functions.mint.MintFunction
 import com.kycdao.android.sdk.model.functions.mint.MintingProperties
-import com.kycdao.android.sdk.network.api.AuthorizeMintingRequestBody
-import com.kycdao.android.sdk.network.api.LoginRequestBody
-import com.kycdao.android.sdk.network.api.MintTokenBody
-import com.kycdao.android.sdk.network.api.UpdateUserRequestBody
+import com.kycdao.android.sdk.model.functions.mint.MintingTransactionResult
+import com.kycdao.android.sdk.network.request_models.AuthorizeMintingRequestBody
+import com.kycdao.android.sdk.network.request_models.LoginRequestBody
+import com.kycdao.android.sdk.network.request_models.MintTokenBody
+import com.kycdao.android.sdk.network.request_models.UpdateUserRequestBody
+
 import com.kycdao.android.sdk.util.asHexString
 import com.kycdao.android.sdk.util.convertBigInteger
 import com.kycdao.android.sdk.util.seconds
@@ -34,7 +39,7 @@ import kotlin.coroutines.suspendCoroutine
  *
  * An instance should be created by calling the KycManager-s createSession function.
  */
-data class KycSession(
+data class KycSession internal constructor(
 	/***
 	 * 	Wallet address used to create the session
 	 */
@@ -138,16 +143,24 @@ data class KycSession(
 	 * The user will be redirected to their wallet, where they have to sign a session data in order to login
 	 */
 	suspend fun login() {
-		// TODO handle network error
-		if (sessionData.user.id == null) {
-			val signature = walletSession.personalSign(walletAddress, loginProof())
-			Timber.d("---------- Input ----------")
-			Timber.e("signature: $signature")
-			val userDto = networkDatasource.login(LoginRequestBody(signature))
+		val signature: String?
+		try {
+			signature = walletSession.personalSign(walletAddress, loginProof())
+		} catch (e: Exception) {
+			throw PersonalSignException(e)
+		}
+		Timber.d("---------- Input ----------")
+		Timber.e("signature: $signature")
+		val userDto : UserDto?
+		try {
+			 userDto = networkDatasource.login(LoginRequestBody(signature))
 			Timber.d("---------- Output ----------")
 			Timber.e("userDto: $userDto")
 			sessionData.user = userDto.mapToKycUser()
+		}catch(e: KycNetworkCallException){
+
 		}
+
 	}
 
 	/**
@@ -157,6 +170,8 @@ data class KycSession(
 	 * @param personalData The personal information required, wrapped in a [PersonalData] class
 	 */
 	suspend fun setPersonalData(personalData: PersonalData) {
+		if (!disclaimerAccepted)
+			throw KycSessionIllegalAction(IllegalAction.DisclaimerNotAccepted)
 		sessionData.user.apply {
 			email = personalData.email
 			residency = personalData.residency
@@ -191,15 +206,27 @@ data class KycSession(
 	 */
 	suspend fun mint(): Uri? {
 		val authCode =
-			authorizeMintingResponse?.code ?: throw Exception("No auth code found")
+			authorizeMintingResponse?.code ?: throw KycSessionIllegalAction(IllegalAction.AuthorizationMissing)
 		val mintingFunction = MintFunction(authCode)
 
 		val transactionProperties = createMintingPropertiesFor(mintingFunction)
-		val result = walletSession.sendMintingTransaction(walletAddress, transactionProperties)
+		val result : MintingTransactionResult?
+		try {
+			result = walletSession.sendMintingTransaction(walletAddress, transactionProperties)
+		}catch(e: Exception){
+			throw SendTransactionException(e)
+		}
 		Timber.d("Receipt hash: ${result.txHash}")
 		val receipt = continueWhenTransactionFinished(result.txHash)
-
-		val tokenId = receipt.transactionReceipt.get().logs[0].topics[3]
+		val tokenId : String?
+		try {
+			 tokenId = receipt.transactionReceipt.get().logs[0].topics[3]
+		}catch(e: Exception){
+			throw GenericKycException(
+				"Token id not found inside the transaction receipt",
+				e.cause
+			)
+		}
 		val decimalTokenId = tokenId.convertBigInteger().toString(10)
 		tokenMinted(authCode, decimalTokenId, result.txHash)
 
@@ -213,17 +240,6 @@ data class KycSession(
 		}
 	}
 
-	suspend fun checkHasValidToken(verificationType: VerificationType): Boolean {
-		val contractConfig = when (verificationType) {
-			VerificationType.KYC -> kycConfig
-			VerificationType.AccreditedInvestor -> accreditedConfig
-		} ?: throw Exception("No contract config found")
-		return walletSession.hasValidToken(
-			walletAddress,
-			contractConfig
-		)
-	}
-
 	/**
 	 * Starts the identity verification process.
 	 *
@@ -233,21 +249,24 @@ data class KycSession(
 	 * @see resumeOnVerificationCompleted
 	 */
 	suspend fun startIdentification(activity: ComponentActivity): IdentityFlowResult {
-		val templateID = personaData.templateID
-		val referenceID = sessionData.user.extId
+		if(!emailConfirmed)
+			throw KycSessionIllegalAction(IllegalAction.EmailIsNotConfirmed)
+
+		val referenceID = sessionData.user.extId ?: throw PersonaException.ExternalIdMissing()
 
 		val identificationResult = suspendCoroutine<InquiryResponse> { continuation ->
 			identityVerificationUseCase(
 				referenceID = referenceID,
-				templateId = templateID,
+				templateId = personaData.templateID,
 				activity = activity,
-				resultContinuation = continuation
+				resultContinuation = continuation,
+				environment = personaData.environment
 			)
 		}
 		return when (identificationResult) {
 			is InquiryResponse.Complete -> IdentityFlowResult.COMPLETED
 			is InquiryResponse.Cancel -> IdentityFlowResult.CANCELLED
-			is InquiryResponse.Error -> throw Exception("Failed persona identification")
+			is InquiryResponse.Error -> throw PersonaException.PersonaVerificationFailed()
 		}
 
 	}
@@ -256,18 +275,25 @@ data class KycSession(
 	 * Accepts the disclaimer if the disclaimer hasn't benn accepted before.
 	 */
 	suspend fun acceptDisclaimer() {
-		if (!disclaimerAccepted) {
-			Timber.d("sending disclaimer acceptance")
+		Timber.d("sending disclaimer acceptance")
+		try {
 			networkDatasource.saveDisclaimer()
-			refreshUser()
-		} else {
-			Timber.d("disclaimer acceptance has already been sent before")
+		} catch (e: KycNetworkCallException) {
+			if (e.networkException is NetworkErrorResponse.ApiError) {
+				if (e.networkException.body.error_code != KYCErrorCode.DisclaimerAlreadyAccepted) {
+					throw e
+				}
+			} else {
+				throw e
+			}
 		}
+		refreshUser()
+
 	}
 
 	private fun createMintingPropertiesFor(function: Function): MintingProperties {
 		val gasPrice = calculateGasPriceFor(function)
-		val resolvedContractAddress = kycConfig?.address ?: throw Exception()
+		val resolvedContractAddress = kycConfig?.address ?: throw ConfigNotFoundException(network = network.name, verificationType = VerificationType.KYC)
 		return MintingProperties(
 			contractAddress = resolvedContractAddress,
 			contractABI = FunctionEncoder.encode(function),
@@ -283,7 +309,7 @@ data class KycSession(
 	 */
 	fun estimateGasForMinting(): GasEstimation {
 		val authCode =
-			authorizeMintingResponse?.code ?: throw Exception("No auth code found")
+			authorizeMintingResponse?.code ?: throw KycSessionIllegalAction(IllegalAction.AuthorizationMissing)
 		val mintingFunction = MintFunction(authCode)
 		return calculateGasPriceFor(mintingFunction)
 	}
@@ -294,9 +320,16 @@ data class KycSession(
 	 * @see resumeOnEmailConfirmed
 	 */
 	suspend fun sendConfirmationEmail() {
-		if (!emailConfirmed) {
-			Timber.d("Confirmation email sent")
+		Timber.d("Confirmation email sent")
+		try {
 			networkDatasource.sendEmailConfirm()
+		} catch (e: KycNetworkCallException) {
+			if (e.networkException is NetworkErrorResponse.ApiError) {
+				if (e.networkException.body.error_code == KYCErrorCode.EmailAlreadyConfirmed) {
+					throw EmailIsAlreadyConfirmed()
+				}
+			}
+			throw e
 		}
 	}
 
@@ -311,10 +344,7 @@ data class KycSession(
 	private fun getGasPrice(): BigInteger {
 		val ethGasPrice = web3j.ethGasPrice().sendAsync().get()
 		if (ethGasPrice.error != null) {
-			Timber.d("error.code: ${ethGasPrice.error?.code}")
-			Timber.d("error.data: ${ethGasPrice.error?.data}")
-			Timber.d("error.message: ${ethGasPrice.error?.message}")
-			// TODO error
+			throw ethGasPrice.error.toException()
 		}
 		return ethGasPrice.gasPrice
 	}
@@ -330,16 +360,13 @@ data class KycSession(
 		)
 		val ethEstimateGas = web3j.ethEstimateGas(transaction).sendAsync().get()
 		if (ethEstimateGas.error != null) {
-			Timber.d("error.code: ${ethEstimateGas.error?.code}")
-			Timber.d("error.data: ${ethEstimateGas.error?.data}")
-			Timber.d("error.message: ${ethEstimateGas.error?.message}")
-			// TODO handle error
+			throw ethEstimateGas.error.toException()
 		}
 		return ethEstimateGas.amountUsed
 	}
 
 	private suspend fun checkAuthorizeMinting() {
-		val mintingTxHash = authorizeMintingResponse?.tx_hash ?: throw Exception()
+		val mintingTxHash = authorizeMintingResponse?.tx_hash ?: throw KycSessionIllegalAction(IllegalAction.AuthorizationMissing)
 		continueWhenTransactionFinished(mintingTxHash)
 	}
 
@@ -374,9 +401,15 @@ data class KycSession(
 		emailPollJob?.cancel()
 		emailPollJob = scope.launch {
 			while (true) {
-				val networkKycUser = networkDatasource.getUser().mapToKycUser()
-				if (networkKycUser.isEmailConfirmed()) {
-					sessionData.user = networkKycUser
+				val kycNetworkUser : KycUser?
+				try {
+					kycNetworkUser = networkDatasource.getUser().mapToKycUser()
+				}catch(e: KycNetworkCallException){
+					emailPollJob?.cancel()
+					throw e
+				}
+				if (kycNetworkUser.isEmailConfirmed()) {
+					sessionData.user = kycNetworkUser
 					Timber.d("email confirmed")
 					break
 				} else {
@@ -393,11 +426,17 @@ data class KycSession(
 	 *
 	 * @see startIdentification
 	 */
-	suspend fun resumeOnVerificationCompleted() {
+	suspend fun resumeWhenIdentified() {
 		verificationPollJob?.cancel()
 		verificationPollJob = scope.launch {
 			while (true) {
-				val networkKycUser = networkDatasource.getUser().mapToKycUser()
+				val networkKycUser : KycUser?
+				try {
+					networkKycUser= networkDatasource.getUser().mapToKycUser()
+				}catch(e: KycNetworkCallException){
+					verificationPollJob?.cancel()
+					throw e
+				}
 				if (networkKycUser.isIdentityVerified()) {
 					sessionData.user = networkKycUser
 					break
@@ -412,7 +451,7 @@ data class KycSession(
 
 
 	private suspend fun authorizeMintingOfNFT(selectedNftId: String) {
-		val blockchainAccount = sessionData.user.blockchainAccounts.first()
+		val blockchainAccount = sessionData.user.blockchainAccounts.firstOrNull() ?: throw NoBlockChainAccountFound()
 
 		Timber.d("---------- Input ----------")
 		Timber.d("selectedNftId: $selectedNftId")
@@ -420,7 +459,7 @@ data class KycSession(
 
 		val authorizeMintingResponse: AuthorizeMintingResponse = networkDatasource.authorizeMinting(
 			AuthorizeMintingRequestBody(
-				//network is currently baked in
+				network = network.id,
 				blockchain_account_id = blockchainAccount.id,
 				selected_image_id = selectedNftId
 			)
@@ -441,7 +480,7 @@ data class KycSession(
 				val transactionReceipt = receipt.transactionReceipt.get()
 				val success = transactionReceipt.status == "0x1"
 				if (!success) {
-					throw Exception("Couldn't get receipt")
+					throw receipt.error.toException()
 				}
 				Timber.d("Transaction finished")
 				return receipt

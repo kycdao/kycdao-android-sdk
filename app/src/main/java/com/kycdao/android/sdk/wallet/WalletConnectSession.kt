@@ -6,18 +6,19 @@ import com.kycdao.android.sdk.model.WalletConnectURL
 import com.kycdao.android.sdk.model.functions.mint.MintingProperties
 import com.kycdao.android.sdk.model.functions.mint.MintingTransactionResult
 import com.kycdao.android.sdk.model.functions.token_validation.HasValidTokenFunction
+import com.kycdao.android.sdk.util.Resource
 import com.kycdao.android.sdk.walletconnect.Session
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.komputing.khex.extensions.toHexString
 import org.web3j.abi.FunctionEncoder
 import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-private typealias FunctionWithSession = (WalletConnectSession) -> Unit
 
 class WalletConnectSession(
 	val wcSession: Session,
-	val wcConfig: Session.Config
+	val wcConfig: Session.Config,
 ) : WalletSession {
 	val url = WalletConnectURL(
 		topic = wcConfig.handshakeTopic,
@@ -26,12 +27,39 @@ class WalletConnectSession(
 		absoluteUri = wcConfig.toWCUri()
 	)
 
-	fun addListenerOnEstablished(approvedCallback: FunctionWithSession) {
+	fun addListener(sessionsFlow: MutableSharedFlow<Resource<WalletConnectSession>>) {
+		//removeListener()
 		wcSession.addCallback(object : Session.Callback {
 			override fun onStatus(status: Session.Status) {
 				Timber.d("onStatus: $status")
-				if (status == Session.Status.Approved) {
-					approvedCallback.invoke(this@WalletConnectSession)
+				when (status) {
+					Session.Status.Approved -> {
+						Timber.d("WC Approved")
+						sessionsFlow.tryEmit(Resource.Success(this@WalletConnectSession))
+					}
+					Session.Status.Closed -> {
+						Timber.d("WC Closed")
+					}
+					Session.Status.Connected -> {
+						Timber.d("WC Connected")
+					}
+					Session.Status.Disconnected -> {
+						sessionsFlow.tryEmit(
+							Resource.Failure(
+								message = "Disconnected",
+							)
+						)
+						Timber.d("WC Disconnected")
+					}
+					is Session.Status.Error -> {
+						Timber.d("WC Error")
+						sessionsFlow.tryEmit(
+							Resource.Failure(
+								message = "Failed to create session",
+								throwable = status.throwable
+							)
+						)
+					}
 				}
 			}
 
@@ -40,7 +68,13 @@ class WalletConnectSession(
 		})
 	}
 
+	fun removeListener(){
+		wcSession.clearCallbacks()
+		wcSession.kill()
+	}
+
 	override val id: String = url.absoluteUri
+	override var rpcURL: String? = null
 	val accounts get() = wcSession.approvedAccounts()
 	val icons get() = wcSession.peerMeta()?.icons
 	val name get() = wcSession.peerMeta()?.name
@@ -110,38 +144,4 @@ class WalletConnectSession(
 		WalletIntent.executeFromUri(wcConfig.toWCUri())
 	}
 
-	override suspend fun hasValidToken(
-		walletAddress: String,
-		verificationConfig: SmartContractConfig
-	): Boolean = suspendCoroutine { continuation ->
-		println("STARTED HAS VALID")
-		wcSession.performMethodCall(
-			Session.MethodCall.Custom(
-				id = System.currentTimeMillis(),
-				method = "eth_call",
-				params = listOf(
-					TransactionCallObject(
-						from = walletAddress,
-						to = verificationConfig.address,
-						data = FunctionEncoder.encode(HasValidTokenFunction(walletAddress))
-					),
-					"latest"
-				)
-			),
-		) {
-			println("IN CALLBACK $it")
-			if (it.error != null) {
-				println("ERROR IN HASVALIDTOKEN")
-				println(it.error.message)
-				println(it.error.code.toString())
-			}
-			val resultString = it.result as? String
-			val result = resultString?.contains("1")
-			println("RESULT:$result")
-			result?.let { res ->
-				continuation.resume(res)
-			}
-		}
-		WalletIntent.executeFromUri(wcConfig.toWCUri())
-	}
 }

@@ -5,11 +5,15 @@ import com.kycdao.android.sdk.KoinContainer.networkDatasource
 import com.kycdao.android.sdk.dto.SmartContractConfigDto
 import com.kycdao.android.sdk.dto.StatusDto
 import com.kycdao.android.sdk.dto.toModel
+import com.kycdao.android.sdk.exceptions.ConfigNotFoundException
+import com.kycdao.android.sdk.exceptions.UnsupportedNetworkException
+import com.kycdao.android.sdk.exceptions.Web3Exception
+import com.kycdao.android.sdk.exceptions.toException
 import com.kycdao.android.sdk.model.Network
 import com.kycdao.android.sdk.model.NetworkOption
 import com.kycdao.android.sdk.model.VerificationType
 import com.kycdao.android.sdk.model.functions.token_validation.HasValidTokenFunction
-import com.kycdao.android.sdk.network.api.CreateSessionRequestBody
+import com.kycdao.android.sdk.network.request_models.CreateSessionRequestBody
 import com.kycdao.android.sdk.wallet.WalletSession
 import org.web3j.abi.FunctionEncoder
 import org.web3j.abi.FunctionReturnDecoder
@@ -36,7 +40,7 @@ object KycManager {
 		val networks = fetchSupportedNetworks()
 		val desiredNetwork = networks.find { network ->
 			network.caip2id == walletSession.getChainId()
-		} ?: throw Exception("Unsupported network")
+		} ?: throw UnsupportedNetworkException(walletSession.getChainId())
 		val createSessionRequestBody = CreateSessionRequestBody(
 			address = walletAddress,
 			blockchain = desiredNetwork.blockchain
@@ -48,7 +52,7 @@ object KycManager {
 		status.smart_contracts_info[desiredNetwork.id]?.get(VerificationType.KYC)?.let { contract ->
 			kycContractConfig = contract
 		} ?: run {
-			throw Exception("No kyc config found")
+			throw ConfigNotFoundException(desiredNetwork.name,VerificationType.KYC)
 		}
 		var accreditedContractConfig: SmartContractConfigDto? = null
 		status.smart_contracts_info[desiredNetwork.id]?.get(VerificationType.AccreditedInvestor)
@@ -69,7 +73,20 @@ object KycManager {
 	private suspend fun fetchSupportedNetworks(): List<Network> {
 		return networkDatasource.getSupportedNetworks()
 	}
-
+	suspend fun hasValidToken(
+		verificationType: VerificationType,
+		walletAddress: String,
+		walletSession: WalletSession
+	) : Boolean{
+		return hasValidToken(
+			verificationType,
+			walletAddress,
+			networkOption = NetworkOption(
+				walletSession.getChainId(),
+				walletSession.rpcURL
+			)
+		)
+	}
 	suspend fun hasValidToken(
 		verificationType: VerificationType,
 		walletAddress: String,
@@ -78,13 +95,13 @@ object KycManager {
 		val networks = fetchSupportedNetworks()
 		val selectedNetworkMetaData = networks.find { network ->
 			network.caip2id == networkOption.chainId
-		} ?: throw Exception("Unsupported network")
+		} ?: throw UnsupportedNetworkException(networkOption.chainId)
 
 		val status: StatusDto = networkDatasource.getStatus()
 
 		val contractConfig = status.smart_contracts_info[selectedNetworkMetaData.id]
 			?.get(verificationType)
-			?: throw Exception("Unsupported network")
+			?: throw ConfigNotFoundException(selectedNetworkMetaData.name,verificationType)
 
 		val clientURL = networkOption.rpcURL
 			?: "https://polygon-mumbai.infura.io/v3/8edae24121f74398b57da7ff5a3729a4"
@@ -102,6 +119,9 @@ object KycManager {
 		)
 		val ethCallResponse =
 			client.ethCall(transaction, DefaultBlockParameterName.LATEST).sendAsync().get()
+		if(ethCallResponse.error != null){
+			throw ethCallResponse.error.toException()
+		}
 		val result = FunctionReturnDecoder.decode(
 			ethCallResponse.value,
 			hasValidTokenFunction.outputParameters

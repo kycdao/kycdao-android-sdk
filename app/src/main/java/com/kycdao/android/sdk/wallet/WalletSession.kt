@@ -8,6 +8,8 @@ interface WalletSession {
 
 	val id: String
 
+	val rpcURL : String?
+
 	/**
 	 * Returns the chain id in CAIP-2 form
 	 */
@@ -35,10 +37,5 @@ interface WalletSession {
 		walletAddress: String,
 		mintingProperties: MintingProperties
 	): MintingTransactionResult
-
-	suspend fun hasValidToken(
-		walletAddress: String,
-		verificationConfig: SmartContractConfig,
-	): Boolean
 
 }

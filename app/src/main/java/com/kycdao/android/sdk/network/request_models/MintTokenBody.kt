@@ -1,4 +1,4 @@
-package com.kycdao.android.sdk.network.api
+package com.kycdao.android.sdk.network.request_models
 
 data class MintTokenBody(
     val authorization_code: String,

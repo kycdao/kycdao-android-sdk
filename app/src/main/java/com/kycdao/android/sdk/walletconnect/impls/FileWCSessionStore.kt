@@ -6,7 +6,7 @@ import com.kycdao.android.sdk.walletconnect.nullOnThrow
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
-class FileWCSessionStore(private val storageFile: File, moshi: Moshi) : WCSessionStore {
+class FileWCSessionStore(private val storageFile: File, moshi: Moshi) :     WCSessionStore {
     private val adapter = moshi.adapter<Map<String, WCSessionStore.State>>(
         Types.newParameterizedType(
             Map::class.java,

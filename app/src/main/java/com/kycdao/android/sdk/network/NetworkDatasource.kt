@@ -6,6 +6,7 @@ import com.kycdao.android.sdk.dto.UserDto
 import com.kycdao.android.sdk.dto.SessionDto
 import com.kycdao.android.sdk.model.Network
 import com.kycdao.android.sdk.network.api.*
+import com.kycdao.android.sdk.network.request_models.*
 
 interface NetworkDatasource {
 

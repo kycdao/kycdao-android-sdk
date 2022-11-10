@@ -5,7 +5,7 @@ import java.io.Serializable
 
 data class KycUser(
 	val id: Long? = null,
-	val extId: String = "",
+	val extId: String? = null,
 	var email: String? = null,
 	var residency: String? = null,
 	var isLegalEntity: Boolean? = null,

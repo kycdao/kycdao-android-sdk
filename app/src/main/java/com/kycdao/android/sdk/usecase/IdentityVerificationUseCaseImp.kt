@@ -14,11 +14,12 @@ class IdentityVerificationUseCaseImp() : IdentityVerificationUseCase {
 	override fun invoke(
 		templateId: String,
 		referenceID: String,
+		environment: Environment,
 		activity: ComponentActivity,
 		resultContinuation: Continuation<InquiryResponse>
 	) {
 
-		startPersona(activity, templateId, referenceID) { result ->
+		startPersona(activity, templateId, referenceID, environment) { result ->
 			resultContinuation.resume(result)
 		}
 	}
@@ -27,6 +28,7 @@ class IdentityVerificationUseCaseImp() : IdentityVerificationUseCase {
 		activity: ComponentActivity,
 		templateId: String,
 		referenceId: String,
+		environment: Environment,
 		callback: ActivityResultCallback<InquiryResponse>
 	) {
 		Timber.d("startPersona(templateId: $templateId, referenceId: $referenceId)")
@@ -40,7 +42,7 @@ class IdentityVerificationUseCaseImp() : IdentityVerificationUseCase {
 
 		val inquiry = Inquiry.fromTemplate(templateId)
 			.referenceId(referenceId)
-			.environment(Environment.SANDBOX)
+			.environment(environment = environment)
 			.build()
 
 		getInquiryResult.launch(inquiry)

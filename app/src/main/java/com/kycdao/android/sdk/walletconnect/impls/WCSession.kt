@@ -4,6 +4,7 @@ import com.kycdao.android.sdk.walletconnect.Session
 import com.kycdao.android.sdk.walletconnect.nullOnThrow
 import com.kycdao.android.sdk.walletconnect.types.extractSessionParams
 import com.kycdao.android.sdk.walletconnect.types.intoMap
+import timber.log.Timber
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -44,6 +45,7 @@ class WCSession(
     init {
         currentKey = config.key.toString()
         clientData = sessionStore.load(config.handshakeTopic)?.let {
+            println("loading session from storage")
             currentKey = it.currentKey
             approvedAccounts = it.approvedAccounts
             chainId = it.chainId
@@ -107,6 +109,7 @@ class WCSession(
                     approvedAccounts = params.accounts
                     chainId = params.chainId
                     storeSession()
+                    Timber.d("APPROVED: ${params.approved}")
                     propagateToCallbacks { onStatus(if (params.approved) Session.Status.Approved else Session.Status.Closed) }
                 }
             })
@@ -285,6 +288,7 @@ class WCSession(
     }
 
     override fun kill() {
+        Timber.d("SESSION KILL")
         val params = Session.SessionParams(false, null, null, null)
         send(Session.MethodCall.SessionUpdate(createCallId(), params))
         endSession()
