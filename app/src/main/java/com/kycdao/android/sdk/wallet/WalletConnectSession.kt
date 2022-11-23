@@ -8,7 +8,11 @@ import com.kycdao.android.sdk.model.functions.mint.MintingTransactionResult
 import com.kycdao.android.sdk.model.functions.token_validation.HasValidTokenFunction
 import com.kycdao.android.sdk.util.Resource
 import com.kycdao.android.sdk.walletconnect.Session
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import org.komputing.khex.extensions.toHexString
 import org.web3j.abi.FunctionEncoder
 import timber.log.Timber
@@ -27,45 +31,18 @@ class WalletConnectSession(
 		absoluteUri = wcConfig.toWCUri()
 	)
 
-	fun addListener(sessionsFlow: MutableSharedFlow<Resource<WalletConnectSession>>) {
-		//removeListener()
-		wcSession.addCallback(object : Session.Callback {
+	fun statusCallbackFlow() : Flow<Session.Status>  = callbackFlow {
+		val callback = object: Session.Callback {
 			override fun onStatus(status: Session.Status) {
-				Timber.d("onStatus: $status")
-				when (status) {
-					Session.Status.Approved -> {
-						Timber.d("WC Approved")
-						sessionsFlow.tryEmit(Resource.Success(this@WalletConnectSession))
-					}
-					Session.Status.Closed -> {
-						Timber.d("WC Closed")
-					}
-					Session.Status.Connected -> {
-						Timber.d("WC Connected")
-					}
-					Session.Status.Disconnected -> {
-						sessionsFlow.tryEmit(
-							Resource.Failure(
-								message = "Disconnected",
-							)
-						)
-						Timber.d("WC Disconnected")
-					}
-					is Session.Status.Error -> {
-						Timber.d("WC Error")
-						sessionsFlow.tryEmit(
-							Resource.Failure(
-								message = "Failed to create session",
-								throwable = status.throwable
-							)
-						)
-					}
-				}
+				trySend(status)
+				Timber.d("STATUS IS $status")
 			}
-
-			override fun onMethodCall(call: Session.MethodCall) {
-			}
-		})
+			override fun onMethodCall(call: Session.MethodCall) {}
+		}
+		wcSession.addCallback(callback)
+		awaitClose {
+			removeListener()
+		}
 	}
 
 	fun removeListener(){

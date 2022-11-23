@@ -43,7 +43,7 @@ afterEvaluate {
 
                 groupId = 'com.github.kycDao'
                 artifactId = 'kycDao-android'
-                version = '0.28.30'
+                version = '0.28.31'
             }
         }
         repositories {
@@ -71,6 +71,9 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${versions.kotlin}"
     implementation "androidx.appcompat:appcompat:$versions.androidx_app_compat"
+
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
+
 
     implementation 'com.squareup.moshi:moshi:1.8.0'
     implementation "com.squareup.moshi:moshi-kotlin:1.8.0"

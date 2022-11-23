@@ -18,12 +18,14 @@ class ConfigNotFoundException(network: String,verificationType: VerificationType
 
 class WalletSessionNotAvailableException
 	: KycException("In order to successfully connect you need to start listening first.")
+
+class WalletSessionNotListening : KycException("Please make sure to start listening for connection events, before attempting to connect to a wallet. This can be done by calling the startListening function. ")
 class UserAlreadyLoggedIn
 	: KycException("A user is already logged into this session")
 data class Web3Exception(
 	val errorMessage: String?,
 	val errorCode: Int,
-	val errorData: String
+	val errorData: String?
 ) : KycException()
 
 open class WalletConnectException(override val cause: Throwable?) : KycException(cause = cause)

@@ -109,7 +109,6 @@ class WCSession(
                     approvedAccounts = params.accounts
                     chainId = params.chainId
                     storeSession()
-                    Timber.d("APPROVED: ${params.approved}")
                     propagateToCallbacks { onStatus(if (params.approved) Session.Status.Approved else Session.Status.Closed) }
                 }
             })

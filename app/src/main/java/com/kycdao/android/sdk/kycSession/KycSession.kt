@@ -160,7 +160,6 @@ data class KycSession internal constructor(
 		}catch(e: KycNetworkCallException){
 
 		}
-
 	}
 
 	/**

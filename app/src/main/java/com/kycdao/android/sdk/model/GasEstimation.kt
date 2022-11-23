@@ -7,7 +7,7 @@ import java.math.BigInteger
 data class GasEstimation private constructor(
 	val amount: BigInteger,
 	var price: BigInteger,
-	val gasCurrency: NativeCurrency
+	val gasCurrency: NativeCurrency,
 ) {
 	companion object Factory {
 		private val MIN_GAS_PRICE: BigInteger =
