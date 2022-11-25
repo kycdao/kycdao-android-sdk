@@ -1,6 +1,6 @@
 package com.kycdao.android.sdk.dto
 
-import com.kycdao.android.sdk.model.KycUser
+import com.kycdao.android.sdk.kycSession.KycUser
 
 data class UserDto(
     val user_hash: String,
