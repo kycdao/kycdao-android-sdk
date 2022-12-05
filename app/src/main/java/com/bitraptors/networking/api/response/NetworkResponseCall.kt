@@ -9,6 +9,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Converter
 import retrofit2.Response
+import timber.log.Timber
 import java.io.IOException
 
 open class NetworkResponseCall<S : Any, E : Any>(
@@ -43,6 +44,7 @@ open class NetworkResponseCall<S : Any, E : Any>(
                         else -> try {
                             errorConverter.convert(error)
                         } catch (ex: Exception) {
+                            Timber.d(ex.message)
                             null
                         }
                     }

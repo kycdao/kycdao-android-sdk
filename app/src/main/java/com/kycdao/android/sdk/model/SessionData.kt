@@ -1,11 +1,11 @@
 package com.kycdao.android.sdk.model
 
-import com.kycdao.android.sdk.kycSession.KycUser
+import com.kycdao.android.sdk.verificationSession.User
 
 data class SessionData(
     val id: String,
     val nonce: String,
-    var user: KycUser
+    var user: User
 )
 
 

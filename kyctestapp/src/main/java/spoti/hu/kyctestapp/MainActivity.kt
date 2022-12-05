@@ -1,17 +1,17 @@
 package spoti.hu.kyctestapp
 
-import android.R.attr.bitmap
 import android.graphics.Color
 import android.os.Bundle
 import androidmads.library.qrgenearator.QRGContents
 import androidmads.library.qrgenearator.QRGEncoder
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.kycdao.android.sdk.kycSession.KycManager
-import com.kycdao.android.sdk.kycSession.KycSession
+import com.kycdao.android.sdk.verificationSession.VerificationManager
+import com.kycdao.android.sdk.verificationSession.VerificationSession
 import com.kycdao.android.sdk.model.PersonalData
 import com.kycdao.android.sdk.model.VerificationType
 import com.kycdao.android.sdk.util.Resource
+import com.kycdao.android.sdk.verificationSession.KycDaoEnvironment
 import com.kycdao.android.sdk.wallet.WalletConnectManager
 import com.kycdao.android.sdk.wallet.WalletConnectSession
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,13 +24,16 @@ import timber.log.Timber
 class MainActivity : AppCompatActivity() {
 	private lateinit var binding: ActivityMainBinding
 	var myWalletSession= MutableStateFlow<WalletConnectSession?>(null)
-	var myKycSessions: MutableList<KycSession> = mutableListOf()
+	var myKycSessions: MutableList<VerificationSession> = mutableListOf()
 
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		Timber.plant(Timber.DebugTree());
 		Timber.d("CREATE")
+		VerificationManager.configure(
+			VerificationManager.Configuration("api-key",KycDaoEnvironment.Development)
+		)
 		lifecycleScope.launchWhenCreated {
 			myWalletSession.collect{
 				binding.connectWallet.text = if(it!= null){
@@ -40,7 +43,6 @@ class MainActivity : AppCompatActivity() {
 				}
 			}
 		}
-		WalletConnectManager.addCustomRPCUrl("eip155:80001", "https://polygon-mumbai.infura.io/v3/8edae24121f74398b57da7ff5a3729a4")
 		lifecycleScope.launchWhenCreated {
 			WalletConnectManager.wcURI.collect{
 				// Initializing the QR Encoder with your value to be encoded, type you required and Dimension
@@ -92,7 +94,7 @@ class MainActivity : AppCompatActivity() {
 			val walletAddress = myWalletSession.value?.getAvailableWallets()?.first()
 				?: throw Exception("No wallet found")
 			lifecycleScope.launch {
-				binding.hasTokenValid.text = KycManager.hasValidToken(
+				binding.hasTokenValid.text = VerificationManager.hasValidToken(
 					VerificationType.KYC,
 					walletAddress,
 					myWalletSession.value!!
@@ -106,7 +108,7 @@ class MainActivity : AppCompatActivity() {
 			val walletAddress = myWalletSession.value?.getAvailableWallets()?.first()
 				?: throw Exception("No wallet found")
 			lifecycleScope.launch {
-				myKycSessions.add(KycManager.createSession(walletAddress, myWalletSession.value!!))
+				myKycSessions.add(VerificationManager.createSession(walletAddress, myWalletSession.value!!))
 			}
 		}
 		binding.login.setOnClickListener {

@@ -1,16 +1,13 @@
 package com.kycdao.android.sdk.network
 
-import com.bitraptors.networking.api.models.NetworkResponse
 import com.kycdao.android.sdk.dto.AuthorizeMintingResponse
 import com.kycdao.android.sdk.dto.SessionDto
 import com.kycdao.android.sdk.dto.StatusDto
 import com.kycdao.android.sdk.dto.UserDto
-import com.kycdao.android.sdk.kycSession.KycSession
 import com.kycdao.android.sdk.model.Network
 import com.kycdao.android.sdk.network.api.*
 import com.kycdao.android.sdk.network.request_models.*
 import com.kycdao.android.sdk.util.handleResponse
-import org.koin.core.component.inject
 
 class NetworkDatasourceImpl(
     val api: APIService

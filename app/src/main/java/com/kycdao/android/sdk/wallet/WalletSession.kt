@@ -4,14 +4,22 @@ import com.kycdao.android.sdk.model.SmartContractConfig
 import com.kycdao.android.sdk.model.functions.mint.MintingProperties
 import com.kycdao.android.sdk.model.functions.mint.MintingTransactionResult
 
+/**
+ * The interface describes a communication session with a wallet that can be used during the verification process.
+ *
+ * ### Wallets
+ * Use this interface, when you want to integrate the kycDAO SDK to you wallet. Provide a concrete implementation of the protocol in a class. Learn more at Wallet Integration about integrating the SDK to a wallet.
+ *
+ * ### DApps
+ * For DApps integrating the kycDAO SDK, you will likely won’t have to use this interface directly. WalletConnect should be used to connect your DApp to a supported Wallet.
+ *
+ */
 interface WalletSession {
 
 	val id: String
 
-	val rpcURL : String?
-
 	/**
-	 * Returns the chain id in CAIP-2 form
+	 * Returns the chain id in <a href="https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-2.md">CAIP-2 format</a>
 	 */
 	fun getChainId(): String
 

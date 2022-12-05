@@ -1,6 +1,6 @@
 package com.kycdao.android.sdk.dto
 
-import com.kycdao.android.sdk.kycSession.KycUser
+import com.kycdao.android.sdk.verificationSession.User
 import com.kycdao.android.sdk.model.SessionData
 
 data class SessionDto(
@@ -12,7 +12,7 @@ data class SessionDto(
         return SessionData(
             id = id,
             nonce = nonce,
-            user = user?.mapToKycUser() ?: KycUser()
+            user = user?.mapToKycUser() ?: User()
         )
     }
 }
