@@ -17,10 +17,9 @@ data class PriceEstimation(
 
 	val gasFeeText: String?
 		get(){
-			if(gasFee== null) return null
-			return gasFee.toText(currency)
+			return gasFee?.toText(currency)
 		}
-	val finalPriceText : String
+	val fullPriceText : String
 		get() = fullPrice.toText(currency)
 
 }
