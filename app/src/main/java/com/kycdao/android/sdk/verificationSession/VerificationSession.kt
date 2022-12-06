@@ -1,14 +1,20 @@
 package com.kycdao.android.sdk.verificationSession
 
+import android.media.session.MediaSession.Token
 import android.net.Uri
 import android.webkit.URLUtil
 import androidx.activity.ComponentActivity
 import com.bitraptors.networking.api.models.NetworkErrorResponse
 import com.kycdao.android.sdk.CustomKoinComponent
 import com.kycdao.android.sdk.dto.AuthorizeMintingResponse
+import com.kycdao.android.sdk.dto.TokenDetailsDto
 import com.kycdao.android.sdk.dto.UserDto
 import com.kycdao.android.sdk.exceptions.*
 import com.kycdao.android.sdk.model.*
+import com.kycdao.android.sdk.model.functions.ABIFunction
+import com.kycdao.android.sdk.model.functions.KYCGetRequiredMintCostForCodeFunction
+import com.kycdao.android.sdk.model.functions.KYCGetRequiredMintCostForSecondsFunction
+import com.kycdao.android.sdk.model.functions.KYCGetSubscriptionCostPerYearUSDFunction
 import com.kycdao.android.sdk.model.functions.mint.MintFunction
 import com.kycdao.android.sdk.model.functions.mint.MintingProperties
 import com.kycdao.android.sdk.model.functions.mint.MintingTransactionResult
@@ -18,34 +24,35 @@ import com.kycdao.android.sdk.network.request_models.LoginRequestBody
 import com.kycdao.android.sdk.network.request_models.MintTokenBody
 import com.kycdao.android.sdk.network.request_models.UpdateUserRequestBody
 import com.kycdao.android.sdk.usecase.IdentityVerificationUseCase
-import com.kycdao.android.sdk.usecase.IdentityVerificationUseCaseImp
+import com.kycdao.android.sdk.util.*
 
-import com.kycdao.android.sdk.util.asHexString
-import com.kycdao.android.sdk.util.convertBigInteger
-import com.kycdao.android.sdk.util.seconds
 import com.kycdao.android.sdk.wallet.WalletSession
 import com.withpersona.sdk2.inquiry.InquiryResponse
 import kotlinx.coroutines.*
+import kotlinx.coroutines.future.await
 import org.koin.core.component.get
 import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 import org.web3j.abi.FunctionEncoder
 import org.web3j.abi.datatypes.Function
+import org.web3j.abi.datatypes.Uint
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.methods.request.Transaction
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt
 import timber.log.Timber
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.net.URI
 import java.util.*
 import kotlin.coroutines.suspendCoroutine
 
-/***
+/**
  * A verification session object which contains session related data and session related operations
  *
  * Instances should be created by calling the VerificationManager-s createSession function.
  */
 data class VerificationSession internal constructor(
-	/***
+	/**
 	 * 	Wallet address used to create the session
 	 */
 	val walletAddress: String,
@@ -55,14 +62,14 @@ data class VerificationSession internal constructor(
 	private val personaData: Persona,
 	private val sessionData: SessionData,
 	internal val rpcURL : String,
-	/***
+	/**
 	 * The wallet session associated with this verification session, used to communicate with a wallet
 	 */
 	val walletSession: WalletSession,
 	private var authorizeMintingResponse: AuthorizeMintingResponse? = null,
 ) : CustomKoinComponent() {
 
-	internal companion object : CustomKoinComponent() {
+	private companion object {
 		private val IDENTITY_VERIFICATION_POLL_INTERVAL = 10.seconds
 		private val EMAIL_CONFIRMED_VERIFICATION_POLL_INTERVAL = 10.seconds
 	}
@@ -70,6 +77,22 @@ data class VerificationSession internal constructor(
 	private val web3j: Web3j by inject() {
 		parametersOf(rpcURL)
 	}
+
+	/**
+	 * The contents of the disclaimer that the user is required to accept to use the service.
+	 * It can be accepted by calling the [acceptDisclaimer] function.
+	 */
+	val disclaimerText = Constants.disclaimerText
+
+	/**
+	 * An URL pointing to the terms of service document.
+	 */
+	val termsOfService = URI.create("https://kycdao.xyz/terms-and-conditions")
+	/**
+	 * An URL pointing to the privacy policy document.
+	 */
+	val privacyPolicy = URI.create("https://kycdao.xyz/privacy-policy")
+
 	private val networkDatasource : NetworkDatasource by inject()
 	private var scope = CoroutineScope(Dispatchers.IO)
 
@@ -122,24 +145,7 @@ data class VerificationSession internal constructor(
 
 	private var emailPollJob: Job? = null
 	private var verificationPollJob: Job? = null
-	/*fun getState(): State {
-		return when {
-			!walletConnected() -> State.CONNECT_WALLET
-			!hasSession() -> State.SESSION_REQUIRED
-			!isLogged() -> State.LOGIN_REQUIRED
-			!hasUserInfo() -> State.USER_INFORMATION_REQUIRED
-			!isEmailConfirmed() -> State.WAIT_EMAIL_CONFIRMED
-			!identityVerificationCompleted() -> State.IDENTITY_VERIFICATION
-			!isIdentityVerified() -> State.POLL_IDENTITY_VERIFICATION_RESULT
-			!nftSelected() -> State.NFT_IMAGE_SELECTION
-			!authorizeMintingFinished() -> State.WAITING_FOR_MINTING_AUTHORISATION
-			!feeCalculationFinished() -> State.CALCULATE_FEE
-			!mintStarted() -> State.MINTING
-			!mintFinished() -> State.CHECK_MINTING
-			!mintTokenSent() -> State.POST_MINT_TOKEN_ID
-			else -> State.COMPLETED
-		}
-	}*/
+
 
 	private fun loginProof(): String {
 		return "kycDAO-login-${sessionData.nonce}"
@@ -198,10 +204,11 @@ data class VerificationSession internal constructor(
 	 * The list of available images can be acquired by calling the [getNFTImages] function.
 	 *
 	 * @param selectedImage the ID of the NFT image that is about to be minted
+	 * @param membershipDuration the number of years the membership is requested.
 	 */
-	suspend fun requestMinting(selectedImage: String) {
+	suspend fun requestMinting(selectedImage: String, membershipDuration: UInt) {
 		Timber.d("Selected Nft Image: $selectedImage")
-		authorizeMintingOfNFT(selectedImage)
+		authorizeMintingOfNFT(selectedImage, membershipDuration)
 		checkAuthorizeMinting()
 	}
 
@@ -218,9 +225,14 @@ data class VerificationSession internal constructor(
 		val authCode =
 			authorizeMintingResponse?.code
 				?: throw VerificationSessionIllegalAction(IllegalAction.AuthorizationMissing)
-		val mintingFunction = MintFunction(authCode)
+		val mintingFunction = ABIFunction<Nothing>(
+			function = MintFunction(authCode),
+			contractAddress = getKycContractAddress(),
+			walletAddress = walletAddress
+		)
+		val requiredMintCost = getRequiredMintCostForCode(authCode)
 
-		val transactionProperties = createMintingPropertiesFor(mintingFunction)
+		val transactionProperties = createMintingPropertiesFor(mintingFunction, requiredMintCost)
 		val result: MintingTransactionResult?
 		try {
 			result = walletSession.sendMintingTransaction(walletAddress, transactionProperties)
@@ -239,7 +251,7 @@ data class VerificationSession internal constructor(
 			)
 		}
 		val decimalTokenId = tokenId.convertBigInteger().toString(10)
-		tokenMinted(authCode, decimalTokenId, result.txHash)
+		val tokenDetails = tokenMinted(authCode, decimalTokenId, result.txHash)
 
 		this.authorizeMintingResponse = null
 
@@ -247,7 +259,8 @@ data class VerificationSession internal constructor(
 		return MintingResult(
 			explorerURL = if (URLUtil.isValidUrl(urlString)) Uri.parse(urlString) else null,
 			transactionId = result.txHash,
-			tokenId = tokenId
+			tokenId = tokenId,
+			imageURL = tokenDetails.image_url
 		)
 
 	}
@@ -287,7 +300,6 @@ data class VerificationSession internal constructor(
 	 * Accepts the disclaimer if the disclaimer hasn't benn accepted before.
 	 */
 	suspend fun acceptDisclaimer() {
-		Timber.d("sending disclaimer acceptance")
 		try {
 			networkDatasource.saveDisclaimer()
 		} catch (e: KycNetworkCallException) {
@@ -303,39 +315,48 @@ data class VerificationSession internal constructor(
 
 	}
 
-	private fun createMintingPropertiesFor(function: Function): MintingProperties {
-		val gasPrice = calculateGasPriceFor(function)
-		val resolvedContractAddress = kycConfig?.address ?: throw ConfigNotFoundException(
-			network = network.name,
-			verificationType = VerificationType.KYC
-		)
+	private suspend fun createMintingPropertiesFor(function: ABIFunction<*>, requiredMintCost: BigInteger): MintingProperties {
+		val gasPrice = calculateGasPriceFor(function.toTransaction(requiredMintCost))
+		val resolvedContractAddress = getKycContractAddress()
+		Timber.d("COST:" + requiredMintCost.toText(network.native_currency))
 		return MintingProperties(
 			contractAddress = resolvedContractAddress,
-			contractABI = FunctionEncoder.encode(function),
+			contractABI = FunctionEncoder.encode(function.function),
 			gasAmount = gasPrice.amount.asHexString(),
 			gasPrice = gasPrice.price.asHexString(),
+			paymentAmount = requiredMintCost.asHexString()
 		)
 	}
 
 	/**
-	 * Creates an estimation for the gas fees during minting
+	 * Creates an estimation for the fee of minting.
 	 *
-	 * @return The gas fee estimation wrapped in [GasEstimation]
+	 * @return The estimated fee wrapped in a [PriceEstimation]
 	 */
-	fun estimateGasForMinting(): GasEstimation {
+	suspend fun getMintingPrice(): PriceEstimation {
 		val authCode =
 			authorizeMintingResponse?.code
 				?: throw VerificationSessionIllegalAction(IllegalAction.AuthorizationMissing)
-		val mintingFunction = MintFunction(authCode)
-		return calculateGasPriceFor(mintingFunction)
+		val mintingFunction = ABIFunction<Nothing>(
+			function = MintFunction(authCode),
+			contractAddress = getKycContractAddress(),
+			walletAddress = walletAddress
+		)
+		val requiredMintCost = getRequiredMintCostForCode(authCode)
+		val gasEstimation = estimateGasUse(mintingFunction.toTransaction(requiredMintCost))
+		return PriceEstimation(
+			paymentAmount = requiredMintCost,
+			gasFee = gasEstimation,
+			currency = network.native_currency
+		)
 	}
 
 	/**
-	 * Sends a confirmation email to the [provided][setPersonalData] email address if the address in question has not been confirmed previously
+	 * Sends a confirmation email to the [provided][setPersonalData] email address if the address in question has not been confirmed previously.
 	 *
 	 * @see resumeOnEmailConfirmed
 	 */
-	suspend fun sendConfirmationEmail() {
+	suspend fun resendConfirmationEmail() {
 		Timber.d("Confirmation email sent")
 		try {
 			networkDatasource.sendEmailConfirm()
@@ -349,32 +370,24 @@ data class VerificationSession internal constructor(
 		}
 	}
 
-	private fun calculateGasPriceFor(function: Function): GasEstimation {
+	private suspend fun calculateGasPriceFor(transaction: Transaction): GasEstimation {
 		return GasEstimation.estimate(
-			amount = estimateGasUse(function),
+			amount = estimateGasUse(transaction),
 			price = getGasPrice(),
 			gasCurrency = network.native_currency
 		)
 	}
 
-	private fun getGasPrice(): BigInteger {
-		val ethGasPrice = web3j.ethGasPrice().sendAsync().get()
+	private suspend fun getGasPrice(): BigInteger {
+		val ethGasPrice = web3j.ethGasPrice().sendAsync().await()
 		if (ethGasPrice.error != null) {
 			throw ethGasPrice.error.toException()
 		}
 		return ethGasPrice.gasPrice
 	}
 
-	private fun estimateGasUse(function: Function): BigInteger {
-		val transaction = Transaction.createFunctionCallTransaction(
-			walletAddress,
-			null,
-			null,
-			null,
-			kycConfig?.address,
-			FunctionEncoder.encode(function)
-		)
-		val ethEstimateGas = web3j.ethEstimateGas(transaction).sendAsync().get()
+	private suspend fun estimateGasUse(transaction: Transaction): BigInteger {
+		val ethEstimateGas = web3j.ethEstimateGas(transaction).sendAsync().await()
 		if (ethEstimateGas.error != null) {
 			throw ethEstimateGas.error.toException()
 		}
@@ -413,6 +426,8 @@ data class VerificationSession internal constructor(
 	/**
 	 * Starts polling the backend and suspends until the email is confirmed.
 	 *
+	 * After a 100 retries it stops with a [SuspensionTimeOutException].
+	 *
 	 * @see sendConfirmationEmail
 	 */
 	suspend fun resumeOnEmailConfirmed() {
@@ -445,7 +460,7 @@ data class VerificationSession internal constructor(
 
 	/**
 	 * Starts polling the backend and suspends until the identity verification result is available.
-	 *
+	 * After a 100 retries it stops with a [SuspensionTimeOutException].
 	 * @see startIdentification
 	 */
 	suspend fun resumeWhenIdentified() {
@@ -497,7 +512,7 @@ data class VerificationSession internal constructor(
 	}
 
 
-	private suspend fun authorizeMintingOfNFT(selectedNftId: String) {
+	private suspend fun authorizeMintingOfNFT(selectedNftId: String, membershipDuration: UInt) {
 		val blockchainAccount =
 			sessionData.user.blockchainAccounts.firstOrNull() ?: throw NoBlockChainAccountFound()
 
@@ -507,9 +522,12 @@ data class VerificationSession internal constructor(
 
 		val authorizeMintingResponse: AuthorizeMintingResponse = networkDatasource.authorizeMinting(
 			AuthorizeMintingRequestBody(
+				accountId = blockchainAccount.id,
 				network = network.id,
-				blockchain_account_id = blockchainAccount.id,
-				selected_image_id = selectedNftId
+				verificationType = VerificationType.KYC,
+				selected_image_id = selectedNftId,
+				subscriptionDuration = membershipDuration
+
 			)
 		)
 
@@ -541,17 +559,78 @@ data class VerificationSession internal constructor(
 	}
 
 
-	private fun getTransactionReceipt(txHash: String): EthGetTransactionReceipt {
-		return web3j.ethGetTransactionReceipt(txHash).sendAsync().get()
+	private suspend fun getTransactionReceipt(txHash: String): EthGetTransactionReceipt {
+		return web3j.ethGetTransactionReceipt(txHash).sendAsync().await()
 	}
 
-	private suspend fun tokenMinted(authCode: String, tokenId: String, txHash: String) {
+	private suspend fun tokenMinted(authCode: String, tokenId: String, txHash: String) : TokenDetailsDto{
 		val mintTokenBody = MintTokenBody(
 			authorization_code = authCode,
 			token_id = tokenId,
 			minting_tx_id = txHash
 		)
-		networkDatasource.sendMintToken(mintTokenBody)
+		return networkDatasource.sendMintToken(mintTokenBody)
+	}
+
+	/**
+	 * Returns how much the subscription costs per year in USD.
+	 *
+	 * @return the price of subscription per year in USD
+	 */
+	suspend fun getMembershipCostPerYear(): BigInteger {
+		val getSubscriptionCostFunction = ABIFunction<BigInteger>(
+			function = KYCGetSubscriptionCostPerYearUSDFunction(),
+			contractAddress = getKycContractAddress(),
+			walletAddress = walletAddress
+		)
+		return web3j.callABIFunction(getSubscriptionCostFunction)
+	}
+	private suspend fun getRawRequiredMintCostForCode(authCode: String) : BigInteger {
+		val getRequiredMintingCostFunction  = ABIFunction<BigInteger>(
+			function = KYCGetRequiredMintCostForCodeFunction(authCode,walletAddress),
+			contractAddress = getKycContractAddress(),
+			walletAddress = walletAddress
+		)
+		return web3j.callABIFunction(getRequiredMintingCostFunction)
+	}
+	private suspend fun getRequiredMintCostForCode(authCode: String) : BigInteger{
+		val mintingCost = getRawRequiredMintCostForCode(authCode)
+		val withSlippage = (mintingCost.toBigDecimal().times(BigDecimal("1.1"))).toBigInteger()
+		return withSlippage
+	}
+
+	private suspend fun getRequiredMintCostForYears(years: UInt) : BigInteger{
+		if(years <1u) throw VerificationSessionIllegalAction(IllegalAction.YearIsZero)
+
+		val discountYears = sessionData.discountYears ?: 0
+		val yearsToPay = years - discountYears.toUInt()
+		val timeInSeconds = yearsToPay.yearsInSeconds
+
+		val getRequiredMintingCostFunction = ABIFunction<BigInteger>(
+			function = KYCGetRequiredMintCostForSecondsFunction(timeInSeconds),
+			contractAddress = getKycContractAddress(),
+			walletAddress = walletAddress,
+		)
+		return web3j.callABIFunction(getRequiredMintingCostFunction)
+	}
+	/**
+	 * Estimates the price based on how long the user wishes to subscribe.
+	 *
+	 * @return the estimated costs wrapped in a [PaymentEstimation] object.
+	 */
+	suspend fun estimatePayment(yearsPurchased: UInt) : PaymentEstimation{
+		val membershipPayment = getRequiredMintCostForYears(yearsPurchased)
+		val discountYears = sessionData.discountYears ?: 0
+		return PaymentEstimation(
+			paymentAmount = membershipPayment, discountYears =discountYears.toUInt(), currency = network.native_currency
+		)
+	}
+
+	private fun getKycContractAddress() : String{
+		return kycConfig?.address ?: throw ConfigNotFoundException(
+			network.name,
+			verificationType = VerificationType.KYC
+		)
 	}
 
 }

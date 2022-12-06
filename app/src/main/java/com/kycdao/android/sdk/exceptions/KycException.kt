@@ -53,7 +53,8 @@ enum class IllegalAction{
 	DisclaimerNotAccepted,
 	EmailIsNotConfirmed,
 	AuthorizationMissing,
-	PersonalInformationMissing
+	PersonalInformationMissing,
+	YearIsZero
 }
 
 fun Response.Error.toException() : Web3Exception{

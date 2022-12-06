@@ -1,5 +1,6 @@
 package com.kycdao.android.sdk.util
 
+import com.kycdao.android.sdk.model.NativeCurrency
 import org.web3j.abi.datatypes.generated.Uint32
 import java.math.BigInteger
 import kotlin.math.abs
@@ -9,7 +10,10 @@ import kotlin.math.max
 fun BigInteger.asHexString(): String {
 	return "0x" + this.toString(16)
 }
-
+val UInt.yearsInSeconds
+	get():UInt {
+		return this * 365u * 24u * 60u * 60u
+	}
 val Int.seconds
 	get():Long {
 		return this * 1000L
@@ -54,7 +58,7 @@ fun String.convertBigInteger(): BigInteger {
 	return result
 }
 
-fun BigInteger.decimalText(divisor: BigInteger, precision: Int): String {
+fun BigInteger.decimalText(divisor: BigInteger, precision: Int = 3): String {
 	val result = this.divideAndRemainder(divisor)
 	val fullUnit = result[0]
 	val remainder = result[1]
@@ -81,4 +85,8 @@ fun BigInteger.digitCount(): Int {
 
 fun String.web3jEncodedUint32(): Uint32 {
 	return Uint32(BigInteger.valueOf(this.toLong()))
+}
+
+fun BigInteger.toText(currency: NativeCurrency) : String{
+	return "${this.decimalText(currency.baseToNativeDivisor)} ${currency.symbol}"
 }
