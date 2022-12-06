@@ -11,7 +11,7 @@ data class Network(
 	val id: String,
 	val name: String,
 	val native_currency: NativeCurrency,
-	val rpcUrL: String? = null
+	val rpcUrl: String? = null
 )
 
 data class Explorer(

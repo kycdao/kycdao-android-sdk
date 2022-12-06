@@ -11,10 +11,12 @@ import com.kycdao.android.sdk.exceptions.toException
 import com.kycdao.android.sdk.model.Network
 import com.kycdao.android.sdk.model.NetworkOption
 import com.kycdao.android.sdk.model.VerificationType
+import com.kycdao.android.sdk.model.functions.ABIFunction
 import com.kycdao.android.sdk.model.functions.token_validation.HasValidTokenFunction
 import com.kycdao.android.sdk.network.NetworkDatasource
 import com.kycdao.android.sdk.network.NetworkDatasourceImpl
 import com.kycdao.android.sdk.network.request_models.CreateSessionRequestBody
+import com.kycdao.android.sdk.util.callABIFunction
 import com.kycdao.android.sdk.wallet.WalletSession
 import com.kycdao.android.sdk.wallet.defaultNetworkConfigs
 import org.koin.core.component.get
@@ -32,7 +34,7 @@ import org.web3j.protocol.http.HttpService
 object VerificationManager{
 
 	data class Configuration(
-		val apiKey: String,
+		//val apiKey: String,
 		val environment: KycDaoEnvironment,
 		val networkConfigurations: List<NetworkOption> = emptyList()
 	)
@@ -136,7 +138,7 @@ object VerificationManager{
 	}
 	private fun getDesiredRPCUrl(network: Network) : String{
 		return configuration?.networkConfigurations?.find { it.chainId == network.caip2id }?.rpcURL
-			?: network.rpcUrL
+			?: network.rpcUrl
 			?: defaultNetworkConfigs.find { it.chainId == network.caip2id }?.rpcURL
 			?: throw UnsupportedNetworkException(network.caip2id)
 	}
@@ -168,26 +170,11 @@ object VerificationManager{
 
 		val selectedRpcURL = getDesiredRPCUrl(selectedNetworkMetaData)
 		val client = Web3j.build(HttpService(selectedRpcURL))
-		val hasValidTokenFunction = HasValidTokenFunction(
-			walletAddress
+		val hasValidTokenFunction = ABIFunction<Boolean>(
+			function = HasValidTokenFunction(walletAddress),
+			contractAddress = contractConfig.address,
+			walletAddress = walletAddress
 		)
-		val transaction = Transaction.createFunctionCallTransaction(
-			/* from = */ walletAddress,
-			/* nonce = */ null,
-			/* gasPrice = */ null,
-			/* gasLimit = */ null,
-			/* to = */ contractConfig.address,
-			/* data = */ FunctionEncoder.encode(hasValidTokenFunction)
-		)
-		val ethCallResponse =
-			client.ethCall(transaction, DefaultBlockParameterName.LATEST).sendAsync().get()
-		if (ethCallResponse.error != null) {
-			throw ethCallResponse.error.toException()
-		}
-		val result = FunctionReturnDecoder.decode(
-			ethCallResponse.value,
-			hasValidTokenFunction.outputParameters
-		)
-		return result[0].value as Boolean
+		return client.callABIFunction(hasValidTokenFunction)
 	}
 }

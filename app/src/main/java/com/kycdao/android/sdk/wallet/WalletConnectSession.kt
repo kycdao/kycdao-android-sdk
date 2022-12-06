@@ -102,7 +102,7 @@ class WalletConnectSession(
 				nonce = null,
 				gasPrice = mintingProperties.gasPrice,
 				gasLimit = mintingProperties.gasAmount,
-				value = null,
+				value = mintingProperties.paymentAmount,
 				data = mintingProperties.contractABI,
 			),
 		) {

@@ -27,8 +27,6 @@ import kotlin.collections.HashMap
 import kotlin.coroutines.CoroutineContext
 
 
-typealias RPCURL = String
-typealias ChainID = String
 
 /**
  * A WalletConnect V1 compatibility support class. Use this, if you want to connect the verification flow to a wallet through WalletConnect
@@ -61,6 +59,11 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 	 */
 	val sessionsState = _sessionsState.asSharedFlow().onEach {
 		openNewConnection()
+		if(it is Resource.Success){
+			launch {
+				datastore.saveWCKey(it.data.wcConfig.handshakeTopic)
+			}
+		}
 	}
 
 	init {
@@ -92,9 +95,6 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 			it.offer()
 		}
 		val wcSession = WalletConnectSession(session, config)
-		launch {
-			datastore.saveWCKey(handshakeTopic)
-		}
 		Timber.d("---------- Output ----------")
 		Timber.d("wcSession: $wcSession")
 		return wcSession
@@ -114,8 +114,8 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 	 */
 	fun startListening() {
 		launch {
+			checkOldConnection()
 			if (!isListening) {
-				checkOldConnection()
 				openNewConnection()
 				isListening = true
 			}
@@ -157,7 +157,7 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 		}
 	}
 
-	private fun openNewConnection() {
+	private suspend fun openNewConnection() {
 		wcSession = createWCSession()
 		wcSession?.let { session ->
 			_wcURI.tryEmit(session.wcConfig.toWCUri())

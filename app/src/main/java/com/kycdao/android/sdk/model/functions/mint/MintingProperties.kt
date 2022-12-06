@@ -5,4 +5,5 @@ data class MintingProperties(
 	val contractABI: String,
 	val gasAmount: String,
 	val gasPrice: String,
+	val paymentAmount: String
 )

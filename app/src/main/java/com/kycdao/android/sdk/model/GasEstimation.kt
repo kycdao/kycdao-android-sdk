@@ -1,6 +1,7 @@
 package com.kycdao.android.sdk.model
 
 import com.kycdao.android.sdk.util.decimalText
+import com.kycdao.android.sdk.util.toText
 import org.web3j.utils.Convert
 import java.math.BigInteger
 
@@ -27,6 +28,6 @@ data class GasEstimation private constructor(
 	}
 
 	val fee get() = price * amount
-	fun feeInNative(precision: Int = 3): String =
-		"${fee.decimalText(gasCurrency.baseToNativeDivisor, precision)} ${gasCurrency.symbol}"
+	fun feeText(): String =
+		fee.toText(currency = gasCurrency)
 }

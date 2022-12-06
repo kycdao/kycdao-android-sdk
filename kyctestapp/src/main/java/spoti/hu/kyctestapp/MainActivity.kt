@@ -11,6 +11,7 @@ import com.kycdao.android.sdk.verificationSession.VerificationSession
 import com.kycdao.android.sdk.model.PersonalData
 import com.kycdao.android.sdk.model.VerificationType
 import com.kycdao.android.sdk.util.Resource
+import com.kycdao.android.sdk.util.toText
 import com.kycdao.android.sdk.verificationSession.KycDaoEnvironment
 import com.kycdao.android.sdk.wallet.WalletConnectManager
 import com.kycdao.android.sdk.wallet.WalletConnectSession
@@ -32,7 +33,7 @@ class MainActivity : AppCompatActivity() {
 		Timber.plant(Timber.DebugTree());
 		Timber.d("CREATE")
 		VerificationManager.configure(
-			VerificationManager.Configuration("api-key",KycDaoEnvironment.Development)
+			VerificationManager.Configuration(KycDaoEnvironment.Development)
 		)
 		lifecycleScope.launchWhenCreated {
 			myWalletSession.collect{
@@ -78,16 +79,22 @@ class MainActivity : AppCompatActivity() {
 				}
 
 			}
-		}/* { walletSession ->
-			println("connectionEstablished ${walletSession.getAvailableWallets()?.first()}" )
-			myWalletSession.update { walletSession }
-			println("Acoounts: "+walletSession.accounts)
-			println("Icons: "+walletSession.icons)
-			println("Name: "+walletSession.name)
-		}*/
+		}
 		binding.acceptDisclaimer.setOnClickListener {
 			lifecycleScope.launch {
 				myKycSessions.first().acceptDisclaimer()
+			}
+		}
+		binding.getPerYear.setOnClickListener {
+			lifecycleScope.launch{
+				val res = myKycSessions.first().getMembershipCostPerYear()
+				Timber.d("$res $")
+			}
+		}
+		binding.estimateCost.setOnClickListener {
+			lifecycleScope.launch{
+				val res = myKycSessions.first().estimatePayment(3u)
+				Timber.d(res.paymentAmountText)
 			}
 		}
 		binding.hasTokenValid.setOnClickListener {
@@ -136,7 +143,7 @@ class MainActivity : AppCompatActivity() {
 		binding.selectNFT.setOnClickListener {
 			lifecycleScope.launch {
 				val images = myKycSessions.first().getNFTImages()
-				myKycSessions.first().requestMinting(images.first().id)
+				myKycSessions.first().requestMinting(images.first().id,3u)
 			}
 		}
 		binding.mintNFT.setOnClickListener {
