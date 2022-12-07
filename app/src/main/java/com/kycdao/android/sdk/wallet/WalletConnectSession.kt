@@ -51,8 +51,7 @@ class WalletConnectSession(
 	}
 
 	override val id: String = url.absoluteUri
-	override var rpcURL: String? = null
-	val accounts get() = wcSession.approvedAccounts()
+ 	val accounts get() = wcSession.approvedAccounts()
 	val icons get() = wcSession.peerMeta()?.icons
 	val name get() = wcSession.peerMeta()?.name
 
@@ -103,7 +102,7 @@ class WalletConnectSession(
 				nonce = null,
 				gasPrice = mintingProperties.gasPrice,
 				gasLimit = mintingProperties.gasAmount,
-				value = null,
+				value = mintingProperties.paymentAmount,
 				data = mintingProperties.contractABI,
 			),
 		) {

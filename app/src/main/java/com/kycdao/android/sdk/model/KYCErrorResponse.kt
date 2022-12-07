@@ -4,12 +4,6 @@ data class KYCErrorResponse(
 	val reference_id: String?,
 	val status_code: Int?,
 	val internal: Boolean?,
-	val error_code: KYCErrorCode?,
+	val error_code: String?,
 )
 
-enum class KYCErrorCode{
-	DisclaimerAlreadyAccepted,
-	EmailAlreadyConfirmed,
-	SessionUserAlreadyExists,
-	AlreadyAccepted
-}

@@ -27,12 +27,9 @@ import kotlin.collections.HashMap
 import kotlin.coroutines.CoroutineContext
 
 
-typealias RPCURL = String
-typealias ChainID = String
 
 /**
- * A helper object responsible for establishing the connection to a wallet via WalletConnect
- *
+ * A WalletConnect V1 compatibility support class. Use this, if you want to connect the verification flow to a wallet through WalletConnect
  */
 object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 	private var wcSession: WalletConnectSession? = null
@@ -43,25 +40,31 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 	private val datastore: DataStore<Preferences> by inject()
 
 	private val _wcURI = MutableStateFlow<String?>(null)
+
+
+	/**
+	 * A hot flow that emits session URIs on which the WalletConnect component is currently awaiting new connections.
+	 */
 	val wcURI = _wcURI.asStateFlow()
 
 
-	private val customRPCUrls: HashMap<ChainID, RPCURL> = hashMapOf()
-	var isListening = false
+	private var isListening = false
 	private val _sessionsState =
 		MutableSharedFlow<Resource<WalletConnectSession>>(extraBufferCapacity = 1)
+
+	/**
+	 * A hot flow on which the results of the wallet connections are emitted.
+	 *
+	 * It can either be a success containing the created WalletConnectSession or an error in case something went wrong.
+	 */
 	val sessionsState = _sessionsState.asSharedFlow().onEach {
 		openNewConnection()
-		if (it is Resource.Success) {
-			it.data.rpcURL = customRPCUrls[it.data.getChainId()]
+		if(it is Resource.Success){
+			launch {
+				datastore.saveWCKey(it.data.wcConfig.handshakeTopic)
+			}
 		}
 	}
-	val activeSession = sessionsState.map {
-		when (it) {
-			is Resource.Failure -> null
-			is Resource.Success -> it
-		}
-	}.stateIn(this, SharingStarted.Eagerly, null)
 
 	init {
 		bridge.start()
@@ -83,18 +86,15 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 			storage,
 			OkHttpTransport.Builder(client, moshi),
 			Session.PeerMeta(
-				url = "https://staging.kycdao.xyz/",
+				url = "https://kycdao.xyz/",
 				name = "KYCDAO",
-				description = "A multichain platform for issuing reusable, onchain KYC verifications",
-				icons = arrayListOf()
+				description = "A multichain platform for issuing reusable, on-chain KYC verifications",
+				icons = listOf("https://avatars.githubusercontent.com/u/87816891?s=200&v=4")
 			)
 		).also {
 			it.offer()
 		}
 		val wcSession = WalletConnectSession(session, config)
-		launch {
-			datastore.saveWCKey(handshakeTopic)
-		}
 		Timber.d("---------- Output ----------")
 		Timber.d("wcSession: $wcSession")
 		return wcSession
@@ -105,26 +105,24 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 		isListening = false
 	}
 
-	fun addCustomRPCUrl(id: ChainID, url: RPCURL) {
-		customRPCUrls[id] = url
-	}
 
 	/**
-	 * Sets a callback to run when a connection with a wallet is successfully established
+	 * Starts a new WalletConnectSession and sets a callback to listen to its state changes.
 	 *
-	 * @param onConnectionEstablished A callback function to run when a connection was successfully established between the wallet and the client.
+	 * Must be called first before attempting to call [connectWallet]
+	 *
 	 */
 	fun startListening() {
 		launch {
+			checkOldConnection()
 			if (!isListening) {
-				checkOldConnection()
 				openNewConnection()
 				isListening = true
 			}
 		}
 	}
 
-	suspend fun checkOldConnection() {
+	private suspend fun checkOldConnection() {
 		val oldKey = datastore.getOldWCKey()
 		Timber.d("Oldkey: $oldKey")
 		if (oldKey != null) {
@@ -159,7 +157,7 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 		}
 	}
 
-	private fun openNewConnection() {
+	private suspend fun openNewConnection() {
 		wcSession = createWCSession()
 		wcSession?.let { session ->
 			_wcURI.tryEmit(session.wcConfig.toWCUri())
@@ -186,7 +184,8 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 	}
 
 	/**
-	 * Starts connection process to a wallet via WalletConnect
+	 * Starts connection process to a wallet via WalletConnect.
+	 * If the users phone has multiple wallets installed, a prompt will be presented where the one to use needs to be selected.
 	 */
 	fun connectWallet() {
 		if (!isListening)

@@ -5,7 +5,7 @@ import org.web3j.abi.datatypes.Function
 
 
 data class MintFunction(val authCode: String) : Function(
-	"mint",
+	"mintWithCode",
 	listOf(authCode.web3jEncodedUint32()),
 	listOf()
 )

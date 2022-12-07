@@ -12,6 +12,9 @@ import com.kycdao.android.sdk.walletconnect.impls.WCSessionStore
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.File
 
+/***
+ * @suppress
+ */
 val walletConnectModule = module{
     single<Moshi> {
         Moshi.Builder().apply {

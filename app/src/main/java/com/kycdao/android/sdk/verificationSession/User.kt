@@ -1,9 +1,9 @@
-package com.kycdao.android.sdk.kycSession
+package com.kycdao.android.sdk.verificationSession
 
 import com.kycdao.android.sdk.model.*
 import java.io.Serializable
 
-data class KycUser(
+data class User(
 	val id: Long? = null,
 	val extId: String? = null,
 	var email: String? = null,

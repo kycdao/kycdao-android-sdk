@@ -1,7 +1,6 @@
 package com.kycdao.android.sdk.exceptions
 
 import com.bitraptors.networking.api.models.NetworkErrorResponse
-import com.kycdao.android.sdk.kycSession.KycSession
 import com.kycdao.android.sdk.model.KYCErrorResponse
 import com.kycdao.android.sdk.model.VerificationType
 import org.web3j.protocol.core.Response
@@ -33,7 +32,9 @@ open class WalletConnectException(override val cause: Throwable?) : KycException
 data class PersonalSignException(val throwable: Throwable) : WalletConnectException(cause = throwable)
 data class SendTransactionException(val throwable: Throwable) : WalletConnectException(cause = throwable)
 
-data class KycSessionIllegalAction(val reason: IllegalAction) : KycException()
+data class VerificationSessionIllegalAction(val reason: IllegalAction) : KycException()
+
+object SuspensionTimeOutException : KycException(message = "Suspension took too long")
 
 class EmailIsAlreadyConfirmed : KycException()
 class NoBlockChainAccountFound : KycException()
@@ -48,9 +49,12 @@ data class GenericKycException(
 ) : KycException()
 
 enum class IllegalAction{
+	NotLoggedIn,
 	DisclaimerNotAccepted,
 	EmailIsNotConfirmed,
 	AuthorizationMissing,
+	PersonalInformationMissing,
+	YearIsZero
 }
 
 fun Response.Error.toException() : Web3Exception{

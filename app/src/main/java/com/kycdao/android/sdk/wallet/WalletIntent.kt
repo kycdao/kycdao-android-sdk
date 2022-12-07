@@ -7,6 +7,9 @@ import com.kycdao.android.sdk.CustomKoinComponent
 import org.koin.core.component.inject
 import timber.log.Timber
 
+/***
+ * @suppress
+ */
 object WalletIntent: CustomKoinComponent(){
     private val context: Context by inject()
 

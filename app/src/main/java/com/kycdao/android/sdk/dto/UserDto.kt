@@ -1,6 +1,6 @@
 package com.kycdao.android.sdk.dto
 
-import com.kycdao.android.sdk.kycSession.KycUser
+import com.kycdao.android.sdk.verificationSession.User
 
 data class UserDto(
     val user_hash: String,
@@ -15,8 +15,8 @@ data class UserDto(
     val available_images: Map<String, AvailableImageDto> = emptyMap(),
     val blockchain_accounts: List<BlockchainAccountDto>
 ) {
-    fun mapToKycUser() : KycUser {
-        return KycUser(
+    fun mapToKycUser() : User {
+        return User(
             id = id,
             extId = ext_id,
             email = email,

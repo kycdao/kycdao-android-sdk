@@ -43,7 +43,7 @@ afterEvaluate {
 
                 groupId = 'com.github.kycDao'
                 artifactId = 'kycDao-android'
-                version = '0.28.31'
+                version = '0.28.32'
             }
         }
         repositories {
@@ -84,10 +84,13 @@ dependencies {
     implementation "com.squareup.retrofit2:retrofit:${versions.retrofit}"
 
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.4'
+
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
 
     api "io.insert-koin:koin-core:$versions.koin_version"
     api "io.insert-koin:koin-android:$versions.koin_version"
+
 
     implementation 'com.withpersona.sdk2:inquiry:2.2.29'
     implementation "com.google.code.gson:gson:2.9.1"
@@ -99,6 +102,31 @@ dependencies {
     implementation "com.jakewharton.timber:timber:5.0.1"
 }
 
-dokkaHtml {
-    outputDirectory.set(file("../docs"))
+tasks.dokkaHtml.configure {
+    outputDirectory.set(file("../docs2"))
+    moduleName.set("KYCDao")
+    dokkaSourceSets{
+        configureEach{
+            skipEmptyPackages.set(true)
+            perPackageOption{
+                matchingRegex.set("""[\\s\\S]+""")
+                suppress.set(true)
+            }
+            for (String p in getExcludedPackages()){
+                perPackageOption {
+                    matchingRegex.set("""$p""")
+                    suppress.set(false)
+                }
+            }
+        }
+    }
+}
+
+private List<String> getExcludedPackages(){
+def excludedPackages = new ArrayList<String>()
+    excludedPackages.add("com.kycdao.android.sdk.model")
+    excludedPackages.add("com.kycdao.android.sdk.verificationSession")
+    excludedPackages.add("com.kycdao.android.sdk.wallet")
+    return excludedPackages
+
 }

@@ -1,9 +1,6 @@
 package com.kycdao.android.sdk.network
 
-import com.kycdao.android.sdk.dto.AuthorizeMintingResponse
-import com.kycdao.android.sdk.dto.StatusDto
-import com.kycdao.android.sdk.dto.UserDto
-import com.kycdao.android.sdk.dto.SessionDto
+import com.kycdao.android.sdk.dto.*
 import com.kycdao.android.sdk.model.Network
 import com.kycdao.android.sdk.network.api.*
 import com.kycdao.android.sdk.network.request_models.*
@@ -18,7 +15,7 @@ interface NetworkDatasource {
     suspend fun getUser() : UserDto
     suspend fun getStatus() : StatusDto
     suspend fun authorizeMinting(body: AuthorizeMintingRequestBody) : AuthorizeMintingResponse
-    suspend fun sendMintToken(body: MintTokenBody)
+    suspend fun sendMintToken(body: MintTokenBody) : TokenDetailsDto
     suspend fun getSupportedNetworks() : List<Network>
 
 }
