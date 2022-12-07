@@ -22,6 +22,12 @@ import timber.log.Timber
 
 class MainFragment : BaseFragment<FragmentMainBinding>() {
 
+    override fun createBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentMainBinding {
+        return FragmentMainBinding.inflate(inflater, container, false)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -164,13 +170,5 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
                 sdk.myKycSessions.first().resendConfirmationEmail()
             }
         }
-    }
-
-
-    override fun createBinding(
-        inflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentMainBinding {
-        return FragmentMainBinding.inflate(inflater, container, false)
     }
 }
