@@ -152,6 +152,11 @@ class MainActivity : AppCompatActivity() {
 				println("probably done : $url")
 			}
 		}
+		binding.resendEmail.setOnClickListener {
+			lifecycleScope.launch{
+				myKycSessions.first().resendConfirmationEmail()
+			}
+		}
 
 	}
 }
