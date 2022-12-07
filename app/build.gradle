@@ -103,7 +103,7 @@ dependencies {
 }
 
 tasks.dokkaHtml.configure {
-    outputDirectory.set(file("../docs2"))
+    outputDirectory.set(file("../docs"))
     moduleName.set("KYCDao")
     dokkaSourceSets{
         configureEach{
