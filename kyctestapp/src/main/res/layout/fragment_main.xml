@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/connectWallet"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:id="@+id/createKyc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="kycSession" />
+
+            <Button
+                android:id="@+id/getPerYear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GetPerYear" />
+
+            <Button
+                android:id="@+id/estimateCost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="EstimateCost" />
+
+            <Button
+                android:id="@+id/login"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Login" />
+
+            <Button
+                android:id="@+id/addPersonalInfoBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="add personal" />
+
+            <Button
+                android:id="@+id/resendEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="resend" />
+
+
+            <Button
+                android:id="@+id/startPersona"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="start persona" />
+
+            <Button
+                android:id="@+id/selectNFT"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="select Nft" />
+
+            <Button
+                android:id="@+id/mintNFT"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="mint NFT" />
+
+            <Button
+                android:id="@+id/hasTokenValid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="has validToken" />
+
+            <Button
+                android:id="@+id/acceptDisclaimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="accept disclaimer" />
+
+            <ImageView
+                android:id="@+id/qrImageView"
+                android:layout_width="300dp"
+                android:layout_height="300dp" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </ScrollView>
+</androidx.appcompat.widget.LinearLayoutCompat>
