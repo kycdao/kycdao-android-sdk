@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidmads.library.qrgenearator.QRGContents
 import androidmads.library.qrgenearator.QRGEncoder
 import androidx.lifecycle.lifecycleScope
@@ -42,8 +43,66 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupVerificationFlow()
+        setupAddressTokenValidation()
+//        legacyFunctions()
+    }
 
+    private fun setupAddressTokenValidation() {
+        binding.addressHasValidToken.setOnClickListener {
+            val walletAddress = sdk.myWalletSession.value?.getAvailableWallets()?.first()
+                ?: throw Exception("No wallet found")
+            lifecycleScope.launch {
+                val text = VerificationManager.hasValidToken(
+                    VerificationType.KYC,
+                    walletAddress,
+                    sdk.myWalletSession.value!!
+                ).toString()
+                Toast.makeText(requireContext(), text, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
+    private fun setupVerificationFlow() {
+        lifecycleScope.launchWhenCreated {
+            WalletConnectManager.sessionsState.collect { result ->
+                when (result) {
+                    is Resource.Failure -> {
+                        Timber.d("FAIL wc")
+                        //WalletConnectManager.startListening()
+                    }
+                    is Resource.Success -> {
+                        Timber.d("SUCCESS wc")
+                        sdk.myWalletSession.update { result.data }
+
+                        try {
+                            sdk.myKycSessions.add(
+                                VerificationManager.createSession(
+                                    result.data.getAvailableWallets()?.first()
+                                        ?: throw Exception("No wallet found"),
+                                    sdk.myWalletSession.value!!
+                                )
+                            )
+                            navigateWithAction(MainFragmentDirections.toCreateSignatureFragment())
+                        } catch (e: Exception) {
+                            Toast.makeText(
+                                requireContext(),
+                                "Create session failed!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+
+            }
+        }
+
+        binding.startVerificationFlow.setOnClickListener {
+            WalletConnectManager.connectWallet()
+        }
+    }
+
+    private fun legacyFunctions() {
         lifecycleScope.launchWhenCreated {
             sdk.myWalletSession.collect {
                 binding.connectWallet.text = if (it != null) {
@@ -171,4 +230,5 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
             }
         }
     }
+
 }

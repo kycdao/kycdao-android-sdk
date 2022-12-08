@@ -11,6 +11,32 @@
         android:name="spoti.hu.kyctestapp.page.MainFragment"
         tools:layout="@layout/fragment_main">
 
+        <action
+            android:id="@+id/to_CreateSignatureFragment"
+            app:destination="@id/createSignatureFragment"
+            app:popUpTo="@id/mainFragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/createSignatureFragment"
+        android:name="spoti.hu.kyctestapp.page.CreateSignatureFragment"
+        tools:layout="@layout/fragment_create_signature">
+
+        <action
+            android:id="@+id/to_InformationRequestFragment"
+            app:destination="@id/informationRequestFragment"
+            app:popUpTo="@id/createSignatureFragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/informationRequestFragment"
+        android:name="spoti.hu.kyctestapp.page.InformationRequestFragment"
+        tools:layout="@layout/fragment_create_signature">
+
     </fragment>
 
 
