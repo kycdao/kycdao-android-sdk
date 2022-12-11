@@ -45,6 +45,8 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
         super.onViewCreated(view, savedInstanceState)
         setupVerificationFlow()
         setupAddressTokenValidation()
+        walletTokenValidation()
+        connectMetaMaskWallet()
 //        legacyFunctions()
     }
 
@@ -59,6 +61,24 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
                     sdk.myWalletSession.value!!
                 ).toString()
                 Toast.makeText(requireContext(), text, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun connectMetaMaskWallet() {
+        //TODO: How we should put this without interfering with another 
+    }
+
+    private fun walletTokenValidation() {
+        binding.walletHasValidToken.setOnClickListener {
+            val walletAddress = sdk.myWalletSession.value?.getAvailableWallets()?.first()
+                ?: throw Exception("No wallet found")
+            lifecycleScope.launch {
+                binding.walletTokenValidity.text = VerificationManager.hasValidToken(
+                    VerificationType.KYC,
+                    walletAddress,
+                    sdk.myWalletSession.value!!
+                ).toString()
             }
         }
     }
