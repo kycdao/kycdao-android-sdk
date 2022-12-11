@@ -5,6 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import androidx.lifecycle.lifecycleScope
+import com.kycdao.android.sdk.model.PersonalData
+import kotlinx.coroutines.launch
 import spoti.hu.kyctestapp.R
 import spoti.hu.kyctestapp.base.BaseFragment
 import spoti.hu.kyctestapp.databinding.FragmentInformationRequestBinding
@@ -20,6 +23,34 @@ class InformationRequestFragment : BaseFragment<FragmentInformationRequestBindin
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupSpinner()
+        setupDisclaimer()
+        setupPersonalDataHandling()
+    }
+
+    private fun setupDisclaimer() {
+        binding.acceptDisclaimer.setOnCheckedChangeListener { _, isChecked ->
+            lifecycleScope.launch {
+
+                //TODO: what if the user tick out
+                if (isChecked) {
+                    sdk.myKycSessions.first().acceptDisclaimer()
+                }
+            }
+        }
+    }
+
+    private fun setupPersonalDataHandling() {
+        binding.continueProcess.setOnClickListener {
+            val mockPersonalInfo = PersonalData(
+                email = "adamszucs2000@gmail.com",
+                residency = "HUN",
+                isLegalEntity = false
+            )
+            lifecycleScope.launch {
+                sdk.myKycSessions.first().setPersonalData(mockPersonalInfo)
+                navigateWithAction(InformationRequestFragmentDirections.toConfirmEmailFragment())
+            }
+        }
     }
 
 
