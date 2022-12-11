@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/navigation_main"
-    app:startDestination="@id/mainFragment">
+    app:startDestination="@id/mintingSuccessfulFragment">
 
 
     <fragment
@@ -37,7 +37,124 @@
         android:name="spoti.hu.kyctestapp.page.InformationRequestFragment"
         tools:layout="@layout/fragment_create_signature">
 
+        <action
+            android:id="@+id/to_ConfirmEmailFragment"
+            app:destination="@id/confirmEmailFragment"
+            app:popUpTo="@id/informationRequestFragment"
+            app:popUpToInclusive="true" />
+
     </fragment>
 
+    <fragment
+        android:id="@+id/confirmEmailFragment"
+        android:name="spoti.hu.kyctestapp.page.ConfirmEmailFragment"
+        tools:layout="@layout/fragment_confirm_email">
+
+        <action
+            android:id="@+id/to_PersonaFragment"
+            app:destination="@id/personaFragment"
+            app:popUpTo="@id/confirmEmailFragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+    <fragment
+        android:id="@+id/personaFragment"
+        android:name="spoti.hu.kyctestapp.page.PersonaFragment"
+        tools:layout="@layout/fragment_persona">
+
+        <action
+            android:id="@+id/to_PersonaCompleteFragment"
+            app:destination="@id/personaCompleteFragment"
+            app:popUpTo="@id/personaFragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/personaCompleteFragment"
+        android:name="spoti.hu.kyctestapp.page.PersonaCompleteFragment"
+        tools:layout="@layout/fragment_persona_complete">
+
+        <action
+            android:id="@+id/to_SelectMembershipFragment"
+            app:destination="@id/selectMembershipFragment"
+            app:popUpTo="@id/personaCompleteFragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/selectMembershipFragment"
+        android:name="spoti.hu.kyctestapp.page.SelectMembershipFragment"
+        tools:layout="@layout/fragment_select_membership">
+
+        <action
+            android:id="@+id/to_SelectNFTImageFragment"
+            app:destination="@id/selectNFTImageFragment"
+            app:popUpTo="@id/selectMembershipFragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/selectNFTImageFragment"
+        android:name="spoti.hu.kyctestapp.page.SelectNFTImageFragment"
+        tools:layout="@layout/fragment_select_nft_image">
+
+        <action
+            android:id="@+id/to_AuthorizeMintingFragment"
+            app:destination="@id/authorizeMintingFragment"
+            app:popUpTo="@id/selectNFTImageFragment"
+            app:popUpToInclusive="true" />
+
+        <action
+            android:id="@+id/to_MintNFTFragment"
+            app:destination="@id/mintNFTFragment"
+            app:popUpTo="@id/selectNFTImageFragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/mintNFTFragment"
+        android:name="spoti.hu.kyctestapp.page.MintNFTFragment"
+        tools:layout="@layout/fragment_mint_nft">
+
+        <action
+            android:id="@+id/to_MintingInProgressFragment"
+            app:destination="@id/mintingInProgressFragment"
+            app:popUpTo="@id/mintNFTFragment"
+            app:popUpToInclusive="true" />
+
+        <action
+            android:id="@+id/to_MintingSuccessfulFragment"
+            app:destination="@id/mintingSuccessfulFragment"
+            app:popUpTo="@id/mintNFTFragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/mintingSuccessfulFragment"
+        android:name="spoti.hu.kyctestapp.page.MintingSuccessfulFragment"
+        tools:layout="@layout/fragment_minting_succesful">
+
+    </fragment>
+
+
+    <fragment
+        android:id="@+id/authorizeMintingFragment"
+        android:name="spoti.hu.kyctestapp.page.AuthorizeMintingFragment"
+        tools:layout="@layout/fragment_authorize_minting">
+
+    </fragment>
+
+
+    <fragment
+        android:id="@+id/mintingInProgressFragment"
+        android:name="spoti.hu.kyctestapp.page.MintingInProgressFragment"
+        tools:layout="@layout/fragment_minting_in_progress">
+
+    </fragment>
 
 </navigation>

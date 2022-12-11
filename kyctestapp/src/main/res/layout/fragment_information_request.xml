@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -38,14 +39,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/separator1" />
 
-    <androidx.appcompat.widget.AppCompatEditText
+    <Spinner
         android:id="@+id/countryInput"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Country"
+        android:layout_marginTop="@dimen/spacing_normal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/emailInput" />
+        app:layout_constraintTop_toBottomOf="@+id/emailInput"
+        tools:listitem="@android:layout/simple_spinner_dropdown_item" />
 
     <CheckBox
         android:id="@+id/acceptDisclaimer"

@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">KycTestApp</string>
+
+    <string-array name="country_array">
+        <item>United Kingdom</item>
+        <item>United States</item>
+        <item>Hungary</item>
+    </string-array>
 </resources>
