@@ -5,5 +5,5 @@ import java.io.Serializable
 data class PersonalData(
     val email: String,
     val residency: String,
-    val isLegalEntity: Boolean,
+   // val isLegalEntity: Boolean,
 ) : Serializable

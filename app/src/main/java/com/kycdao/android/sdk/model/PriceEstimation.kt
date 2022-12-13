@@ -6,7 +6,7 @@ import java.math.BigInteger
 
 data class PriceEstimation(
 	val paymentAmount: BigInteger,
-	val gasFee: BigInteger?,
+	val gasFee: BigInteger,
 	val currency: NativeCurrency
 ) {
 	val fullPrice : BigInteger
@@ -15,9 +15,9 @@ data class PriceEstimation(
 	val paymentAmountText : String
 		get() = paymentAmount.toText(currency)
 
-	val gasFeeText: String?
+	val gasFeeText: String
 		get(){
-			return gasFee?.toText(currency)
+			return gasFee.toText(currency)
 		}
 	val fullPriceText : String
 		get() = fullPrice.toText(currency)

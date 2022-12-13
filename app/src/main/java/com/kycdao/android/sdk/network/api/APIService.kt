@@ -15,6 +15,9 @@ interface APIService {
         @Body body: CreateSessionRequestBody,
     ) : NetworkResponse<SessionDto,KYCErrorResponse>
 
+    @GET("session")
+    suspend fun getSession() : NetworkResponse<SessionDto,KYCErrorResponse>
+
     @POST("user")
     suspend fun login(
         @Body body: LoginRequestBody,

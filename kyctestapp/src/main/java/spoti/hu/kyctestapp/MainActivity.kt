@@ -1,7 +1,9 @@
 package spoti.hu.kyctestapp
 
+import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
+import android.widget.Toast
 import androidmads.library.qrgenearator.QRGContents
 import androidmads.library.qrgenearator.QRGEncoder
 import androidx.appcompat.app.AppCompatActivity
@@ -121,42 +123,51 @@ class MainActivity : AppCompatActivity() {
 		binding.login.setOnClickListener {
 			lifecycleScope.launch {
 				myKycSessions.first().login()
-				println("userID: ${myKycSessions.first().loggedIn}")
+				toast("UserLoggedIn: ${myKycSessions.first().loggedIn}")
 			}
 		}
 		binding.addPersonalInfoBtn.setOnClickListener {
 			val mockPersonalInfo = PersonalData(
 				email = "adamszucs2000@gmail.com",
 				residency = "HUN",
-				isLegalEntity = false
 			)
 			lifecycleScope.launch {
 				myKycSessions.first().setPersonalData(mockPersonalInfo)
 				myKycSessions.first().resumeOnEmailConfirmed()
+				toast("Email confirmed")
 			}
 		}
 		binding.startPersona.setOnClickListener {
 			lifecycleScope.launch {
-				myKycSessions.first().startIdentification(this@MainActivity)
+				val res = myKycSessions.first().startIdentification(this@MainActivity)
+				toast("Persona result: ${res.name}")
 			}
 		}
 		binding.selectNFT.setOnClickListener {
 			lifecycleScope.launch {
 				val images = myKycSessions.first().getNFTImages()
 				myKycSessions.first().requestMinting(images.first().id,3u)
+				toast("Mint authorized")
 			}
 		}
 		binding.mintNFT.setOnClickListener {
 			lifecycleScope.launch {
 				val url = myKycSessions.first().mint()
 				println("probably done : $url")
+				toast("Done")
 			}
 		}
 		binding.resendEmail.setOnClickListener {
 			lifecycleScope.launch{
 				myKycSessions.first().resendConfirmationEmail()
+				toast("Email resent")
 			}
 		}
 
 	}
+}
+
+fun Activity.toast(message: String){
+	Toast.makeText(this, message,
+		Toast.LENGTH_SHORT).show();
 }

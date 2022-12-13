@@ -2,6 +2,7 @@ package com.kycdao.android.sdk.verificationSession
 
 import com.kycdao.android.sdk.model.*
 import java.io.Serializable
+import java.util.Date
 
 data class User(
 	val id: Long? = null,
@@ -13,7 +14,8 @@ data class User(
 	val disclaimerAccepted: String? = null,
 	val verificationRequests: List<VerificationRequest> = emptyList(),
 	val availableImages: List<TokenImage> = emptyList(),
-	val blockchainAccounts: List<BlockchainAccount> = emptyList()
+	val blockchainAccounts: List<BlockchainAccount> = emptyList(),
+    val subscriptionExpiryDate: Date? = null,
 ) : Serializable {
 	fun isIdentityVerified(): Boolean {
 		return verificationRequests.any {
@@ -47,4 +49,11 @@ data class User(
 	fun isEmailConfirmed(): Boolean {
 		return emailConfirmed?.isNotEmpty() ?: false
 	}
+
+	val hasMembership : Boolean
+		get(){
+			val now = Date()
+			return subscriptionExpiryDate?.after(now) ?: false
+		}
+
 }

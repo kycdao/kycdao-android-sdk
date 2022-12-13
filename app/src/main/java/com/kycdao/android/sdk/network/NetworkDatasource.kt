@@ -12,6 +12,7 @@ interface NetworkDatasource {
     suspend fun updateUser(body: UpdateUserRequestBody) : UserDto
     suspend fun saveDisclaimer()
     suspend fun sendEmailConfirm()
+    suspend fun getSession() : SessionDto
     suspend fun getUser() : UserDto
     suspend fun getStatus() : StatusDto
     suspend fun authorizeMinting(body: AuthorizeMintingRequestBody) : AuthorizeMintingResponse
