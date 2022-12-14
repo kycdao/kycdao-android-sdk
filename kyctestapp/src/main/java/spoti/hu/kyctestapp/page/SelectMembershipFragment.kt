@@ -36,13 +36,13 @@ class SelectMembershipFragment : BaseFragment<FragmentSelectMembershipBinding>()
 
     private fun setupSteppers() {
         binding.decreasePeriod.setOnClickListener {
-            selectedDuration.value =
-                if (selectedDuration.value > 0) selectedDuration.value-- else 0
+            if (selectedDuration.value >= 1) {
+                selectedDuration.value = selectedDuration.value--
+            }
         }
 
         binding.increasePeriod.setOnClickListener {
-            selectedDuration.value =
-                if (selectedDuration.value == 100) 100 else selectedDuration.value++
+            selectedDuration.value = selectedDuration.value++
         }
     }
 

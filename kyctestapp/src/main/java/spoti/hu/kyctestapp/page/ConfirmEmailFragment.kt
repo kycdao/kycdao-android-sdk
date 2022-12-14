@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
+import com.kycdao.android.sdk.model.VerificationStatus
 import kotlinx.coroutines.launch
 import spoti.hu.kyctestapp.base.BaseFragment
 import spoti.hu.kyctestapp.databinding.FragmentConfirmEmailBinding
@@ -26,9 +27,14 @@ class ConfirmEmailFragment : BaseFragment<FragmentConfirmEmailBinding>() {
 
     private fun setupCheckEmailConfirm() {
         lifecycleScope.launch {
-            //TODO: ????
             sdk.myKycSessions.first().resumeOnEmailConfirmed()
-            navigateWithAction(ConfirmEmailFragmentDirections.toPersonaFragment())
+
+            val verificationSession = sdk.myKycSessions.first()
+            if (verificationSession.verificationStatus == VerificationStatus.VERIFIED) {
+                navigateWithAction(ConfirmEmailFragmentDirections.toSelectMembershipFragment())
+            }else{
+                navigateWithAction(ConfirmEmailFragmentDirections.toPersonaFragment())
+            }
         }
     }
 

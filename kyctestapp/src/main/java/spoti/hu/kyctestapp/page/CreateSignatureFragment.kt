@@ -5,7 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
+import com.bitraptors.networking.api.models.NetworkErrorResponse
+import com.kycdao.android.sdk.exceptions.KycNetworkCallException
+import com.kycdao.android.sdk.model.KYCErrorResponse
 import spoti.hu.kyctestapp.base.BaseFragment
 import spoti.hu.kyctestapp.databinding.FragmentCreateSignatureBinding
 import timber.log.Timber
@@ -25,12 +27,26 @@ class CreateSignatureFragment : BaseFragment<FragmentCreateSignatureBinding>() {
 
     private fun setupSignatureCreation() {
         binding.login.setOnClickListener {
-            lifecycleScope.launch {
-                sdk.myKycSessions.first().login()
-                Timber.d("userID: ${sdk.myKycSessions.first().loggedIn}")
-                navigateWithAction(CreateSignatureFragmentDirections.toInformationRequestFragment())
+            lifecycleScope.launchWhenResumed {
+
+
+                try {
+                    sdk.myKycSessions.first().login()
+                    Timber.d("userID: ${sdk.myKycSessions.first().loggedIn}")
+                    navigateToInformationRequestPage()
+                } catch (e: KycNetworkCallException) {
+                    e.printStackTrace()
+                    if (e.networkException is NetworkErrorResponse.ApiError && (e.networkException as NetworkErrorResponse.ApiError<KYCErrorResponse>).code == 400) {
+                        navigateToInformationRequestPage()
+                    }
+                }
+
             }
         }
+    }
+
+    private fun navigateToInformationRequestPage() {
+        navigateWithAction(CreateSignatureFragmentDirections.toInformationRequestFragment())
     }
 }
 

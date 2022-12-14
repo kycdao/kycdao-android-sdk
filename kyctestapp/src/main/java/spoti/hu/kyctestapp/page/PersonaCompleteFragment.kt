@@ -5,9 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
-import com.kycdao.android.sdk.model.IdentityFlowResult
 import com.kycdao.android.sdk.model.VerificationStatus
-import kotlinx.coroutines.launch
 import spoti.hu.kyctestapp.base.BaseFragment
 import spoti.hu.kyctestapp.databinding.FragmentPersonaCompleteBinding
 
@@ -26,18 +24,16 @@ class PersonaCompleteFragment : BaseFragment<FragmentPersonaCompleteBinding>() {
 
 
     private fun setupVerification() {
-        lifecycleScope.launch {
-            //TODO: error handling?!
+        lifecycleScope.launchWhenResumed {
             val verificationSession = sdk.myKycSessions.first()
-            if (verificationSession.verificationStatus == VerificationStatus.PROCESSING) {
+            if (verificationSession.verificationStatus == VerificationStatus.NOT_VERIFIED) {
+                //TODO: sign that it is a retry!
+                navigateWithAction(PersonaCompleteFragmentDirections.toPersonaFragment())
+            } else {
+                //TODO: error handling?!
                 verificationSession.resumeWhenIdentified()
-            } else if (verificationSession.verificationStatus == VerificationStatus.NOT_VERIFIED) {
-                var identityResult = verificationSession.startIdentification(requireActivity())
-                if (identityResult == IdentityFlowResult.COMPLETED) {
-                    verificationSession.resumeWhenIdentified()
-                }
+                navigateWithAction(PersonaCompleteFragmentDirections.toSelectMembershipFragment())
             }
-            navigateWithAction(ConfirmEmailFragmentDirections.toPersonaFragment())
         }
     }
 }

@@ -72,6 +72,7 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
         binding.selectNFT.setOnClickListener {
             lifecycleScope.launch {
                 //TODO: BRING DURATION HERE!!!
+                //TODO: till the requestminting is running show loading
                 selectedImage?.id?.let { it1 -> sdk.myKycSessions.first().requestMinting(it1, 3u) }
                 navigateWithAction(SelectNFTImageFragmentDirections.toMintNFTFragment())
             }
@@ -79,7 +80,8 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
     }
 
 
-    class NFTCellAdapter : RecyclerView.Adapter<NFTCellAdapter.ViewHolder>() {
+    class NFTCellAdapter(val sessionId: String) :
+        RecyclerView.Adapter<NFTCellAdapter.ViewHolder>() {
 
         val dataSet: MutableList<TokenImage> = mutableListOf()
 
@@ -106,7 +108,6 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
 
         override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
             viewHolder.artwork.load(dataSet[position].url)
-
         }
 
         override fun getItemCount() = dataSet.size

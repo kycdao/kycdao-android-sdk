@@ -56,6 +56,12 @@
             app:popUpTo="@id/confirmEmailFragment"
             app:popUpToInclusive="true" />
 
+        <action
+            android:id="@+id/to_SelectMembershipFragment"
+            app:destination="@id/selectMembershipFragment"
+            app:popUpTo="@id/confirmEmailFragment"
+            app:popUpToInclusive="true" />
+
     </fragment>
     <fragment
         android:id="@+id/personaFragment"
@@ -68,6 +74,7 @@
             app:popUpTo="@id/personaFragment"
             app:popUpToInclusive="true" />
 
+
     </fragment>
 
     <fragment
@@ -78,6 +85,14 @@
         <action
             android:id="@+id/to_SelectMembershipFragment"
             app:destination="@id/selectMembershipFragment"
+            app:popUpTo="@id/personaCompleteFragment"
+            app:popUpToInclusive="true" />
+
+
+        <!--        TODO: THIS IS A RETRY AS THE PREVIOUS ONE FAILED!-->
+        <action
+            android:id="@+id/to_PersonaFragment"
+            app:destination="@id/personaFragment"
             app:popUpTo="@id/personaCompleteFragment"
             app:popUpToInclusive="true" />
 
