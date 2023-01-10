@@ -11,10 +11,7 @@ import com.kycdao.android.sdk.dto.TokenDetailsDto
 import com.kycdao.android.sdk.dto.UserDto
 import com.kycdao.android.sdk.exceptions.*
 import com.kycdao.android.sdk.model.*
-import com.kycdao.android.sdk.model.functions.ABIFunction
-import com.kycdao.android.sdk.model.functions.KYCGetRequiredMintCostForCodeFunction
-import com.kycdao.android.sdk.model.functions.KYCGetRequiredMintCostForSecondsFunction
-import com.kycdao.android.sdk.model.functions.KYCGetSubscriptionCostPerYearUSDFunction
+import com.kycdao.android.sdk.model.functions.*
 import com.kycdao.android.sdk.model.functions.mint.MintFunction
 import com.kycdao.android.sdk.model.functions.mint.MintingProperties
 import com.kycdao.android.sdk.model.functions.mint.MintingTransactionResult
@@ -612,13 +609,22 @@ data class VerificationSession internal constructor(
 	 *
 	 * @return the price of subscription per year in USD
 	 */
-	suspend fun getMembershipCostPerYear(): Int {
+	suspend fun getMembershipCostPerYear(): Double {
 		val getSubscriptionCostFunction = ABIFunction<BigInteger>(
 			function = KYCGetSubscriptionCostPerYearUSDFunction(),
 			contractAddress = getKycContractAddress(),
 			walletAddress = walletAddress
 		)
-		return web3j.callABIFunction(getSubscriptionCostFunction).intValueExact()
+		val getDecimalFunction = ABIFunction<BigInteger>(
+			function = KYCGetSubscriptionCostDecimalFunction(),
+			contractAddress = getKycContractAddress(),
+			walletAddress = walletAddress
+		)
+		val rawPrice = scope.async { web3j.callABIFunction(getSubscriptionCostFunction) }
+		val decimal = scope.async { web3j.callABIFunction(getDecimalFunction) }
+		val divider = BigInteger.TEN.pow(decimal.await().intValueExact())
+		val price = rawPrice.await().toBigDecimal().divide(divider.toBigDecimal())
+		return price.toDouble()
 	}
 
 	private suspend fun getRawRequiredMintCostForCode(authCode: String): BigInteger {
