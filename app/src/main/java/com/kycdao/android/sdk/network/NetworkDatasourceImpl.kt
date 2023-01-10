@@ -54,4 +54,8 @@ class NetworkDatasourceImpl(
         return api.getNetworks().handleResponse()
     }
 
+    override suspend fun getNewIdenticons() {
+        return api.getNewIdenticons().handleResponse()
+    }
+
 }

@@ -18,5 +18,6 @@ interface NetworkDatasource {
     suspend fun authorizeMinting(body: AuthorizeMintingRequestBody) : AuthorizeMintingResponse
     suspend fun sendMintToken(body: MintTokenBody) : TokenDetailsDto
     suspend fun getSupportedNetworks() : List<Network>
+    suspend fun getNewIdenticons()
 
 }

@@ -34,6 +34,9 @@ interface APIService {
     @POST("user/email_confirmation")
     suspend fun sendEmailConfirm() : NetworkResponse<EmptyResponse, KYCErrorResponse>
 
+    @POST("token/identicon")
+    suspend fun getNewIdenticons(): NetworkResponse<EmptyResponse,KYCErrorResponse>
+
     @GET("user")
     suspend fun getUser() : NetworkResponse<UserDto,KYCErrorResponse>
 
