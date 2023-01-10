@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity() {
 		}
 		binding.getPerYear.setOnClickListener {
 			lifecycleScope.launch{
-				val res = myKycSessions.first().getMembershipCostPerYear()
+				val res = myKycSessions.first().getMembershipCostPerYearText()
 				Timber.d("$res $")
 			}
 		}
@@ -103,11 +103,11 @@ class MainActivity : AppCompatActivity() {
 			val walletAddress = myWalletSession.value?.getAvailableWallets()?.first()
 				?: throw Exception("No wallet found")
 			lifecycleScope.launch {
-				binding.hasTokenValid.text = VerificationManager.hasValidToken(
+				val result = VerificationManager.checkVerifiedNetworks(
 					VerificationType.KYC,
 					walletAddress,
-					myWalletSession.value!!
 				).toString()
+				Timber.d("HASVALIDTOKENONANY: $result")
 			}
 		}
 		binding.connectWallet.setOnClickListener {

@@ -153,9 +153,9 @@ data class VerificationSession internal constructor(
 	private var personaSessionData: PersonaSessionData? = null
 
 
-	private fun loginProof(): String {
-		return "kycDAO-login-${sessionData.nonce}"
-	}
+	private val loginProof: String
+		get() = "kycDAO-login-${sessionData.nonce}"
+
 
 	/**
 	 * Provides the user selectable NFT images
@@ -166,11 +166,13 @@ data class VerificationSession internal constructor(
 		Timber.d("Images: ${getNFTImages()}")
 
 	}
-	suspend fun regenerateNFTImages() : List<TokenImage> {
+
+	suspend fun regenerateNFTImages(): List<TokenImage> {
 		Timber.d("ORiginal: ${getNFTImages()}")
 
 		networkDatasource.getNewIdenticons()
 		refreshUser()
+
 		return getNFTImages()
 	}
 
@@ -182,7 +184,7 @@ data class VerificationSession internal constructor(
 	suspend fun login() {
 		val signature: String?
 		try {
-			signature = walletSession.personalSign(walletAddress, loginProof())
+			signature = walletSession.personalSign(walletAddress, loginProof)
 		} catch (e: Exception) {
 			throw PersonalSignException(e)
 		}
@@ -194,8 +196,14 @@ data class VerificationSession internal constructor(
 			Timber.d("---------- Output ----------")
 			Timber.e("userDto: $userDto")
 			sessionData.user = userDto.mapToKycUser()
-		} catch (e: Exception) {
-
+		} catch (e: KycNetworkCallException) {
+			if (e.networkException is NetworkErrorResponse.ApiError) {
+				if (e.networkException.body.error_code != "SessionUserAlreadyExists") {
+					throw e
+				}
+			} else {
+				throw e
+			}
 		}
 
 	}
@@ -634,7 +642,7 @@ data class VerificationSession internal constructor(
 	 *
 	 * @return the price of subscription per year in USD
 	 */
-	suspend fun getMembershipCostPerYear(): Double {
+	suspend fun getMembershipCostPerYearText(): String {
 		val getSubscriptionCostFunction = ABIFunction<BigInteger>(
 			function = KYCGetSubscriptionCostPerYearUSDFunction(),
 			contractAddress = getKycContractAddress(),
@@ -649,7 +657,7 @@ data class VerificationSession internal constructor(
 		val decimal = scope.async { web3j.callABIFunction(getDecimalFunction) }
 		val divider = BigInteger.TEN.pow(decimal.await().intValueExact())
 		val price = rawPrice.await().toBigDecimal().divide(divider.toBigDecimal())
-		return price.toDouble()
+		return price.toString()
 	}
 
 	private suspend fun getRawRequiredMintCostForCode(authCode: String): BigInteger {

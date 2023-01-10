@@ -19,6 +19,10 @@ import com.kycdao.android.sdk.network.request_models.CreateSessionRequestBody
 import com.kycdao.android.sdk.util.callABIFunction
 import com.kycdao.android.sdk.wallet.WalletSession
 import com.kycdao.android.sdk.wallet.defaultNetworkConfigs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import org.koin.core.component.get
 import org.koin.core.parameter.parametersOf
 import org.web3j.abi.FunctionEncoder
@@ -27,6 +31,7 @@ import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.protocol.core.methods.request.Transaction
 import org.web3j.protocol.http.HttpService
+import timber.log.Timber
 
 /**
  * A class used for verification related tasks, like querying verification status for different wallets or creating verification sessions.
@@ -167,7 +172,6 @@ object VerificationManager{
 		val contractConfig = status.smart_contracts_info[selectedNetworkMetaData.id]
 			?.get(verificationType)
 			?: throw ConfigNotFoundException(selectedNetworkMetaData.name, verificationType)
-
 		val selectedRpcURL = getDesiredRPCUrl(selectedNetworkMetaData)
 		val client = Web3j.build(HttpService(selectedRpcURL))
 		val hasValidTokenFunction = ABIFunction<Boolean>(
@@ -176,5 +180,22 @@ object VerificationManager{
 			walletAddress = walletAddress
 		)
 		return client.callABIFunction(hasValidTokenFunction)
+	}
+	private val scope = CoroutineScope(Dispatchers.IO)
+	suspend fun checkVerifiedNetworks(
+		verificationType: VerificationType,
+		walletAddress: String
+	) : Map<String,Boolean>{
+		val networks = fetchSupportedNetworks()
+		return networks.map {
+			it.caip2id to
+					scope.async {
+						try {
+							hasValidToken(verificationType, walletAddress, it.caip2id)
+						} catch (e: Exception) {
+							false
+						}
+					}
+		}.associate { it.first to it.second.await() }
 	}
 }
