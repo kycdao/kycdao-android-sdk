@@ -195,7 +195,7 @@ data class VerificationSession internal constructor(
 		} catch (e: KycNetworkCallException) {
 			if (e.networkException is NetworkErrorResponse.ApiError) {
 				if (e.networkException.body.error_code != "SessionUserAlreadyExists") {
-					throw e
+					throw UserAlreadyLoggedIn()
 				}
 			} else {
 				throw e
