@@ -2,6 +2,7 @@ package com.kycdao.android.sdk.usecase
 
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultCallback
+import com.kycdao.android.sdk.model.PersonaSessionData
 import com.withpersona.sdk2.inquiry.Environment
 import com.withpersona.sdk2.inquiry.Inquiry
 import com.withpersona.sdk2.inquiry.InquiryResponse
@@ -16,10 +17,11 @@ class IdentityVerificationUseCaseImp() : IdentityVerificationUseCase {
 		referenceID: String,
 		environment: Environment,
 		activity: ComponentActivity,
-		resultContinuation: Continuation<InquiryResponse>
+		resultContinuation: Continuation<InquiryResponse>,
+		personaSessionData: PersonaSessionData?
 	) {
 
-		startPersona(activity, templateId, referenceID, environment) { result ->
+		startPersona(activity, templateId, referenceID, environment,personaSessionData) { result ->
 			resultContinuation.resume(result)
 		}
 	}
@@ -29,6 +31,7 @@ class IdentityVerificationUseCaseImp() : IdentityVerificationUseCase {
 		templateId: String,
 		referenceId: String,
 		environment: Environment,
+		personaSessionData: PersonaSessionData?,
 		callback: ActivityResultCallback<InquiryResponse>
 	) {
 		Timber.d("startPersona(templateId: $templateId, referenceId: $referenceId)")
@@ -40,10 +43,14 @@ class IdentityVerificationUseCaseImp() : IdentityVerificationUseCase {
 				callback
 			)
 
-		val inquiry = Inquiry.fromTemplate(templateId)
-			.referenceId(referenceId)
-			.environment(environment = environment)
-			.build()
+		val inquiry = if(personaSessionData!=null) {
+			Inquiry.fromInquiry(personaSessionData.inquiryId).sessionToken(personaSessionData.sessionToken).build()
+		}else {
+			Inquiry.fromTemplate(templateId)
+				.referenceId(referenceId)
+				.environment(environment = environment)
+				.build()
+		}
 
 		getInquiryResult.launch(inquiry)
 	}

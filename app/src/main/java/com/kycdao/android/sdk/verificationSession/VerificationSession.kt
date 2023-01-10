@@ -1,4 +1,5 @@
 package com.kycdao.android.sdk.verificationSession
+
 import android.media.session.MediaSession.Token
 import android.net.Uri
 import android.webkit.URLUtil
@@ -97,7 +98,7 @@ data class VerificationSession internal constructor(
 	private val networkDatasource: NetworkDatasource by inject()
 	private var scope = CoroutineScope(Dispatchers.IO)
 
-	val hasMembership : Boolean get() = sessionData.user.hasMembership
+	val hasMembership: Boolean get() = sessionData.user.hasMembership
 
 	/**
 	 * A unique identifier for this session
@@ -149,6 +150,8 @@ data class VerificationSession internal constructor(
 	private var emailPollJob: Job? = null
 	private var verificationPollJob: Job? = null
 
+	private var personaSessionData: PersonaSessionData? = null
+
 
 	private fun loginProof(): String {
 		return "kycDAO-login-${sessionData.nonce}"
@@ -177,14 +180,14 @@ data class VerificationSession internal constructor(
 		Timber.d("---------- Input ----------")
 		Timber.e("signature: $signature")
 		val userDto: UserDto?
-	try{
-		userDto = networkDatasource.login(LoginRequestBody(signature))
-		Timber.d("---------- Output ----------")
-		Timber.e("userDto: $userDto")
-		sessionData.user = userDto.mapToKycUser()
-	}catch(e: Exception){
+		try {
+			userDto = networkDatasource.login(LoginRequestBody(signature))
+			Timber.d("---------- Output ----------")
+			Timber.e("userDto: $userDto")
+			sessionData.user = userDto.mapToKycUser()
+		} catch (e: Exception) {
 
-	}
+		}
 
 	}
 
@@ -251,9 +254,9 @@ data class VerificationSession internal constructor(
 		Timber.d("LOGS: ${receipt.transactionReceipt.get().logs}")
 		var tokenId: String? = null
 		try {
-			for(log in receipt.transactionReceipt.get().logs){
+			for (log in receipt.transactionReceipt.get().logs) {
 				val result = ERC721Contract.getTopicID(log)
-				if(result!=null){
+				if (result != null) {
 					tokenId = result
 					break
 				}
@@ -264,9 +267,9 @@ data class VerificationSession internal constructor(
 				e.cause
 			)
 		}
-		if(tokenId==null) {
+		if (tokenId == null) {
 			throw GenericKycException(
-				"Token id not found inside the transaction receipt",null
+				"Token id not found inside the transaction receipt", null
 			)
 		}
 		Timber.d("TOKENID: $tokenId")
@@ -304,8 +307,20 @@ data class VerificationSession internal constructor(
 				templateId = personaData.templateID,
 				activity = activity,
 				resultContinuation = continuation,
-				environment = personaData.environment
+				environment = personaData.environment,
+				personaSessionData = personaSessionData
 			)
+		}
+		if (identificationResult is InquiryResponse.Cancel) {
+			identificationResult.inquiryId?.let { inquiryId ->
+				personaSessionData = PersonaSessionData(
+					referenceId = referenceID,
+					inquiryId = inquiryId,
+					sessionToken = identificationResult.sessionToken
+				)
+			}
+		} else {
+			personaSessionData = null
 		}
 		return when (identificationResult) {
 			is InquiryResponse.Complete -> IdentityFlowResult.COMPLETED
@@ -428,7 +443,8 @@ data class VerificationSession internal constructor(
 		val updatedUser = networkDatasource.getUser().mapToKycUser()
 		sessionData.user = updatedUser
 	}
-	private suspend fun refreshSession(){
+
+	private suspend fun refreshSession() {
 		val updatedSession = networkDatasource.getSession().mapToSessionData()
 		sessionData = updatedSession
 	}
@@ -538,7 +554,7 @@ data class VerificationSession internal constructor(
 	}
 
 
-	private suspend fun  authorizeMintingOfNFT(selectedNftId: String, membershipDuration: UInt) {
+	private suspend fun authorizeMintingOfNFT(selectedNftId: String, membershipDuration: UInt) {
 		val blockchainAccount =
 			sessionData.user.blockchainAccounts.firstOrNull() ?: throw NoBlockChainAccountFound()
 
