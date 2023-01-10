@@ -541,7 +541,7 @@ data class VerificationSession internal constructor(
 	}
 
 
-	private suspend fun authorizeMintingOfNFT(selectedNftId: String, membershipDuration: UInt) {
+	private suspend fun  authorizeMintingOfNFT(selectedNftId: String, membershipDuration: UInt) {
 		val blockchainAccount =
 			sessionData.user.blockchainAccounts.firstOrNull() ?: throw NoBlockChainAccountFound()
 
@@ -618,7 +618,7 @@ data class VerificationSession internal constructor(
 			contractAddress = getKycContractAddress(),
 			walletAddress = walletAddress
 		)
-		return web3j.callABIFunction(getSubscriptionCostFunction) as Int
+		return web3j.callABIFunction(getSubscriptionCostFunction).intValueExact()
 	}
 
 	private suspend fun getRawRequiredMintCostForCode(authCode: String): BigInteger {

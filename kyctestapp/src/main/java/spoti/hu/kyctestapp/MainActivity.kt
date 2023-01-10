@@ -29,7 +29,6 @@ class MainActivity : AppCompatActivity() {
 	var myWalletSession= MutableStateFlow<WalletConnectSession?>(null)
 	var myKycSessions: MutableList<VerificationSession> = mutableListOf()
 
-
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		Timber.plant(Timber.DebugTree());
@@ -40,6 +39,7 @@ class MainActivity : AppCompatActivity() {
 		lifecycleScope.launchWhenCreated {
 			myWalletSession.collect{
 				binding.connectWallet.text = if(it!= null){
+					binding.walletTopicText.text = it.wcConfig.handshakeTopic
 					"wallet connected"
 				}else{
 					"connect"
@@ -111,7 +111,9 @@ class MainActivity : AppCompatActivity() {
 			}
 		}
 		binding.connectWallet.setOnClickListener {
-			WalletConnectManager.connectWallet()
+			lifecycleScope.launch {
+				WalletConnectManager.connectWallet()
+			}
 		}
 		binding.createKyc.setOnClickListener {
 			val walletAddress = myWalletSession.value?.getAvailableWallets()?.first()

@@ -16,15 +16,14 @@ import java.io.File
  * @suppress
  */
 val walletConnectModule = module{
-    single<Moshi>(named("wallet_connect")) {
+    single<Moshi>() {
         Moshi.Builder().apply {
             add(KotlinJsonAdapterFactory())
         }
             .build()
     }
 
-    single<WCSessionStore>{ FileWCSessionStore(File(androidApplication().cacheDir, "session_store.json").apply { createNewFile() }, get(
-        named("wallet_connect"))) }
+    single<WCSessionStore>{ FileWCSessionStore(File(androidApplication().cacheDir, "session_store.json").apply { createNewFile() }, get()) }
     single<BridgeServer>{ BridgeServer(get()) }
     single<OkHttpClient>(named("WalletConnectClient")){ OkHttpClient.Builder().build()}
 }

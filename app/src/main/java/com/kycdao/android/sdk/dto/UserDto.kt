@@ -1,6 +1,7 @@
 package com.kycdao.android.sdk.dto
 
 import com.kycdao.android.sdk.verificationSession.User
+import java.text.SimpleDateFormat
 import java.util.*
 
 data class UserDto(
@@ -15,9 +16,10 @@ data class UserDto(
     val verification_requests: List<VerificationRequestDto> = emptyList(),
     val available_images: Map<String, AvailableImageDto> = emptyMap(),
     val blockchain_accounts: List<BlockchainAccountDto>,
-    val subscription_expiry: Date?
+    val subscription_expiry: String?
 ) {
     fun mapToKycUser() : User {
+        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
         return User(
             id = id,
             extId = ext_id,
@@ -29,7 +31,7 @@ data class UserDto(
             verificationRequests = verification_requests.map { it.mapToVerificationRequest() },
             availableImages = available_images.map { it.value.mapToAvailableImage(it.key) },
             blockchainAccounts = blockchain_accounts.map { it.mapToBlockchainAccount() },
-            subscriptionExpiryDate = subscription_expiry
+            subscriptionExpiryDate = if(subscription_expiry!= null) format.parse(subscription_expiry)else null
         )
     }
 }
