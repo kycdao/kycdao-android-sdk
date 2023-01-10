@@ -1,6 +1,5 @@
 package com.kycdao.android.sdk.verificationSession
 
-import android.media.session.MediaSession.Token
 import android.net.Uri
 import android.webkit.URLUtil
 import androidx.activity.ComponentActivity
@@ -32,14 +31,9 @@ import org.koin.core.component.get
 import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 import org.web3j.abi.FunctionEncoder
-import org.web3j.abi.datatypes.Event
-import org.web3j.abi.datatypes.Function
-import org.web3j.abi.datatypes.Uint
 import org.web3j.protocol.Web3j
-import org.web3j.protocol.core.methods.request.EthFilter
 import org.web3j.protocol.core.methods.request.Transaction
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt
-import org.web3j.tx.Contract
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -122,6 +116,8 @@ data class VerificationSession internal constructor(
 	 */
 	val emailConfirmed: Boolean
 		get() = sessionData.user.isEmailConfirmed()
+	val currentEmail: String?
+		get() = sessionData.user.email
 
 	/**
 	 * Whether the user is logged in or not.
@@ -521,7 +517,7 @@ data class VerificationSession internal constructor(
 	 * After a 100 retries it stops with a [SuspensionTimeOutException].
 	 * @see startIdentification
 	 */
-	suspend fun resumeWhenIdentified() {
+	suspend fun resumeOnVerificationCompleted() {
 		verificationPollJob?.cancel()
 		var timeOutCounter = 0
 		verificationPollJob = scope.launch {

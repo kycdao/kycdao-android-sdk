@@ -7,14 +7,12 @@ import com.kycdao.android.sdk.dto.StatusDto
 import com.kycdao.android.sdk.dto.toModel
 import com.kycdao.android.sdk.exceptions.ConfigNotFoundException
 import com.kycdao.android.sdk.exceptions.UnsupportedNetworkException
-import com.kycdao.android.sdk.exceptions.toException
 import com.kycdao.android.sdk.model.Network
-import com.kycdao.android.sdk.model.NetworkOption
+import com.kycdao.android.sdk.model.NetworkConfiguration
 import com.kycdao.android.sdk.model.VerificationType
 import com.kycdao.android.sdk.model.functions.ABIFunction
 import com.kycdao.android.sdk.model.functions.token_validation.HasValidTokenFunction
 import com.kycdao.android.sdk.network.NetworkDatasource
-import com.kycdao.android.sdk.network.NetworkDatasourceImpl
 import com.kycdao.android.sdk.network.request_models.CreateSessionRequestBody
 import com.kycdao.android.sdk.util.callABIFunction
 import com.kycdao.android.sdk.wallet.WalletSession
@@ -22,16 +20,10 @@ import com.kycdao.android.sdk.wallet.defaultNetworkConfigs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import org.koin.core.component.get
 import org.koin.core.parameter.parametersOf
-import org.web3j.abi.FunctionEncoder
-import org.web3j.abi.FunctionReturnDecoder
 import org.web3j.protocol.Web3j
-import org.web3j.protocol.core.DefaultBlockParameterName
-import org.web3j.protocol.core.methods.request.Transaction
 import org.web3j.protocol.http.HttpService
-import timber.log.Timber
 
 /**
  * A class used for verification related tasks, like querying verification status for different wallets or creating verification sessions.
@@ -41,7 +33,7 @@ object VerificationManager{
 	data class Configuration(
 		//val apiKey: String,
 		val environment: KycDaoEnvironment,
-		val networkConfigurations: List<NetworkOption> = emptyList()
+		val networkConfigurations: Set<NetworkConfiguration> = emptySet()
 	)
 
 	private var configuration: Configuration? = null
