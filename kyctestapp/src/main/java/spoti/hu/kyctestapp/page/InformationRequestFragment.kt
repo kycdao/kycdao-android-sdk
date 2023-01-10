@@ -33,7 +33,7 @@ class InformationRequestFragment : BaseFragment<FragmentInformationRequestBindin
 
                 //TODO: what if the user tick out
                 if (isChecked) {
-                    sdk.myKycSessions.first().acceptDisclaimer()
+                    sdk.getVerificationSession().acceptDisclaimer()
                 }
             }
         }
@@ -47,7 +47,7 @@ class InformationRequestFragment : BaseFragment<FragmentInformationRequestBindin
                 isLegalEntity = false
             )
             lifecycleScope.launch {
-                sdk.myKycSessions.first().setPersonalData(mockPersonalInfo)
+                sdk.getVerificationSession().setPersonalData(mockPersonalInfo)
                 navigateWithAction(InformationRequestFragmentDirections.toConfirmEmailFragment())
             }
         }

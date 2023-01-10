@@ -116,6 +116,10 @@
         android:name="spoti.hu.kyctestapp.page.SelectNFTImageFragment"
         tools:layout="@layout/fragment_select_nft_image">
 
+        <argument
+            android:name="duration"
+            app:argType="integer" />
+
         <action
             android:id="@+id/to_AuthorizeMintingFragment"
             app:destination="@id/authorizeMintingFragment"

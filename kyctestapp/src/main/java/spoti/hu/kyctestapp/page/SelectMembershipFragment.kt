@@ -12,9 +12,10 @@ import spoti.hu.kyctestapp.databinding.FragmentSelectMembershipBinding
 import java.math.BigInteger
 
 class SelectMembershipFragment : BaseFragment<FragmentSelectMembershipBinding>() {
+
+
     override fun createBinding(
-        inflater: LayoutInflater,
-        container: ViewGroup?
+        inflater: LayoutInflater, container: ViewGroup?
     ): FragmentSelectMembershipBinding {
         return FragmentSelectMembershipBinding.inflate(inflater, container, false)
     }
@@ -26,11 +27,15 @@ class SelectMembershipFragment : BaseFragment<FragmentSelectMembershipBinding>()
         setupSelectMembership()
     }
 
-    private val selectedDuration = MutableStateFlow<Int>(1)
+    private val selectedDuration = MutableStateFlow(1)
 
     private fun setupSelectMembership() {
         binding.selectMembership.setOnClickListener {
-            navigateWithAction(SelectMembershipFragmentDirections.toSelectNFTImageFragment())
+            navigateWithAction(
+                SelectMembershipFragmentDirections.toSelectNFTImageFragment(
+                    selectedDuration.value
+                )
+            )
         }
     }
 
@@ -50,7 +55,7 @@ class SelectMembershipFragment : BaseFragment<FragmentSelectMembershipBinding>()
     private fun setupTexts() {
         lifecycleScope.launch {
             selectedDuration.collect() { year ->
-                val verificationSession = sdk.myKycSessions.first()
+                val verificationSession = sdk.getVerificationSession()
                 // Display yearly membership cost in dollars
                 val cost = verificationSession.getMembershipCostPerYear()
                 binding.price.text = "$cost / year"

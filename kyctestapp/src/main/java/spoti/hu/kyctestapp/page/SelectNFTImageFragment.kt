@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
@@ -16,6 +17,9 @@ import spoti.hu.kyctestapp.base.BaseFragment
 import spoti.hu.kyctestapp.databinding.FragmentSelectNftImageBinding
 
 class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
+
+    private val args by navArgs<SelectNFTImageFragmentArgs>()
+
     override fun createBinding(
         inflater: LayoutInflater,
         container: ViewGroup?
@@ -62,7 +66,7 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
         })
 
         lifecycleScope.launch {
-            val images = sdk.myKycSessions.first().getNFTImages()
+            val images = sdk.getVerificationSession().getNFTImages()
             adapter.setData(images)
             selectedImage = images[0]
         }
@@ -71,11 +75,10 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
     private fun setupSelectNFT() {
         binding.selectNFT.setOnClickListener {
             lifecycleScope.launch {
-                //TODO: BRING DURATION HERE!!!
                 showAuthorizing()
                 try {
                     selectedImage?.let { img ->
-                        sdk.myKycSessions.first().requestMinting(img.id, 3u)
+                        sdk.getVerificationSession().requestMinting(img.id, args.duration.toUInt())
                         navigateWithAction(SelectNFTImageFragmentDirections.toMintNFTFragment(img.url))
                     }
 

@@ -31,8 +31,8 @@ class CreateSignatureFragment : BaseFragment<FragmentCreateSignatureBinding>() {
 
 
                 try {
-                    sdk.myKycSessions.first().login()
-                    Timber.d("userID: ${sdk.myKycSessions.first().loggedIn}")
+                    sdk.getVerificationSession().login()
+                    Timber.d("userID: ${sdk.getVerificationSession().loggedIn}")
                     navigateToInformationRequestPage()
                 } catch (e: KycNetworkCallException) {
                     e.printStackTrace()

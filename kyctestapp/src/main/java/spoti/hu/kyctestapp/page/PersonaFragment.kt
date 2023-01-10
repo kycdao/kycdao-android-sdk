@@ -27,7 +27,7 @@ class PersonaFragment : BaseFragment<FragmentPersonaBinding>() {
     private fun setupStartPersona() {
         binding.startPersona.setOnClickListener {
             lifecycleScope.launch {
-                when (sdk.myKycSessions.first().startIdentification(requireActivity())) {
+                when (sdk.getVerificationSession().startIdentification(requireActivity())) {
                     IdentityFlowResult.COMPLETED -> {
                         navigateWithAction(PersonaFragmentDirections.toPersonaCompleteFragment())
                     }

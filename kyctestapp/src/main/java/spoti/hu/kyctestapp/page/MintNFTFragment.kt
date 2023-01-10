@@ -14,7 +14,7 @@ import spoti.hu.kyctestapp.databinding.FragmentMintNftBinding
 
 class MintNFTFragment : BaseFragment<FragmentMintNftBinding>() {
 
-    val args by navArgs<MintNFTFragmentArgs>()
+    private val args by navArgs<MintNFTFragmentArgs>()
 
     override fun createBinding(
         inflater: LayoutInflater,
@@ -36,7 +36,7 @@ class MintNFTFragment : BaseFragment<FragmentMintNftBinding>() {
 
     private fun setupText() {
         lifecycleScope.launch {
-            val verificationSession = sdk.myKycSessions.first()
+            val verificationSession = sdk.getVerificationSession()
             var mintingPrice = verificationSession.getMintingPrice()
             binding.fee.text = mintingPrice.fullPriceText
         }
@@ -47,7 +47,7 @@ class MintNFTFragment : BaseFragment<FragmentMintNftBinding>() {
             lifecycleScope.launch {
                 showMinting()
                 try {
-                    val url = sdk.myKycSessions.first().mint()
+                    val url = sdk.getVerificationSession().mint()
                     navigateWithAction(MintNFTFragmentDirections.toMintingSuccessfulFragment())
                 } catch (e: Exception) {
                     dismissMinting()

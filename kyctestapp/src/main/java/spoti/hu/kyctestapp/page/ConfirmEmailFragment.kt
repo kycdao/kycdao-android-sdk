@@ -27,9 +27,9 @@ class ConfirmEmailFragment : BaseFragment<FragmentConfirmEmailBinding>() {
 
     private fun setupCheckEmailConfirm() {
         lifecycleScope.launch {
-            sdk.myKycSessions.first().resumeOnEmailConfirmed()
+            sdk.getVerificationSession().resumeOnEmailConfirmed()
 
-            val verificationSession = sdk.myKycSessions.first()
+            val verificationSession = sdk.getVerificationSession()
             if (verificationSession.verificationStatus == VerificationStatus.VERIFIED) {
                 navigateWithAction(ConfirmEmailFragmentDirections.toSelectMembershipFragment())
             }else{
@@ -41,7 +41,7 @@ class ConfirmEmailFragment : BaseFragment<FragmentConfirmEmailBinding>() {
     private fun setupResend() {
         binding.resendEmail.setOnClickListener {
             lifecycleScope.launch {
-                sdk.myKycSessions.first().resendConfirmationEmail()
+                sdk.getVerificationSession().resendConfirmationEmail()
             }
         }
     }

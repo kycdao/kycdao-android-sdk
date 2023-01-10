@@ -25,7 +25,7 @@ class PersonaCompleteFragment : BaseFragment<FragmentPersonaCompleteBinding>() {
 
     private fun setupVerification() {
         lifecycleScope.launchWhenResumed {
-            val verificationSession = sdk.myKycSessions.first()
+            val verificationSession = sdk.getVerificationSession()
             if (verificationSession.verificationStatus == VerificationStatus.NOT_VERIFIED) {
                 //TODO: sign that it is a retry!
                 navigateWithAction(PersonaCompleteFragmentDirections.toPersonaFragment())

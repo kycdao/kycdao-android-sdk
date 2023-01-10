@@ -1,21 +1,16 @@
 package spoti.hu.kyctestapp.page
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidmads.library.qrgenearator.QRGContents
-import androidmads.library.qrgenearator.QRGEncoder
 import androidx.lifecycle.lifecycleScope
-import com.kycdao.android.sdk.model.PersonalData
 import com.kycdao.android.sdk.model.VerificationType
 import com.kycdao.android.sdk.util.Resource
 import com.kycdao.android.sdk.verificationSession.KycDaoEnvironment
 import com.kycdao.android.sdk.verificationSession.VerificationManager
 import com.kycdao.android.sdk.wallet.WalletConnectManager
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import spoti.hu.kyctestapp.base.BaseFragment
 import spoti.hu.kyctestapp.databinding.FragmentMainBinding
@@ -52,13 +47,13 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
 
     private fun setupAddressTokenValidation() {
         binding.addressHasValidToken.setOnClickListener {
-            val walletAddress = sdk.myWalletSession.value?.getAvailableWallets()?.first()
+            val walletAddress = sdk.getWalletConnectSession().getAvailableWallets()?.first()
                 ?: throw Exception("No wallet found")
             lifecycleScope.launch {
                 val text = VerificationManager.hasValidToken(
                     VerificationType.KYC,
                     walletAddress,
-                    sdk.myWalletSession.value!!
+                    sdk.getWalletConnectSession()
                 ).toString()
                 Toast.makeText(requireContext(), text, Toast.LENGTH_SHORT).show()
             }
@@ -66,18 +61,17 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
     }
 //
 //    private fun connectMetaMaskWallet() {
-//        //TODO: How we should put this without interfering with another
 //    }
 //
 //    private fun walletTokenValidation() {
 //        binding.walletHasValidToken.setOnClickListener {
-//            val walletAddress = sdk.myWalletSession.value?.getAvailableWallets()?.first()
+//            val walletAddress = sdk.getWalletConnectSession()?.getAvailableWallets()?.first()
 //                ?: throw Exception("No wallet found")
 //            lifecycleScope.launch {
 //                binding.walletTokenValidity.text = VerificationManager.hasValidToken(
 //                    VerificationType.KYC,
 //                    walletAddress,
-//                    sdk.myWalletSession.value!!
+//                    sdk.getWalletConnectSession()!!
 //                ).toString()
 //            }
 //        }
@@ -93,14 +87,14 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
                     }
                     is Resource.Success -> {
                         Timber.d("SUCCESS wc")
-                        sdk.myWalletSession.update { result.data }
+                        sdk.saveWalletConnectSession(result.data)
 
                         try {
-                            sdk.myKycSessions.add(
+                            sdk.saveVerificationSession(
                                 VerificationManager.createSession(
                                     result.data.getAvailableWallets()?.first()
                                         ?: throw Exception("No wallet found"),
-                                    sdk.myWalletSession.value!!
+                                    sdk.getWalletConnectSession()
                                 )
                             )
                             navigateWithAction(MainFragmentDirections.toCreateSignatureFragment())
@@ -169,29 +163,29 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
 //
 //        binding.acceptDisclaimer.setOnClickListener {
 //            lifecycleScope.launch {
-//                sdk.myKycSessions.first().acceptDisclaimer()
+//                sdk.getVerificationSession().acceptDisclaimer()
 //            }
 //        }
 //        binding.getPerYear.setOnClickListener {
 //            lifecycleScope.launch {
-//                val res = sdk.myKycSessions.first().getMembershipCostPerYear()
+//                val res = sdk.getVerificationSession().getMembershipCostPerYear()
 //                Timber.d("$res $")
 //            }
 //        }
 //        binding.estimateCost.setOnClickListener {
 //            lifecycleScope.launch {
-//                val res = sdk.myKycSessions.first().estimatePayment(3u)
+//                val res = sdk.getVerificationSession().estimatePayment(3u)
 //                Timber.d(res.paymentAmountText)
 //            }
 //        }
 //        binding.hasTokenValid.setOnClickListener {
-//            val walletAddress = sdk.myWalletSession.value?.getAvailableWallets()?.first()
+//            val walletAddress = sdk.getWalletConnectSession()?.getAvailableWallets()?.first()
 //                ?: throw Exception("No wallet found")
 //            lifecycleScope.launch {
 //                binding.hasTokenValid.text = VerificationManager.hasValidToken(
 //                    VerificationType.KYC,
 //                    walletAddress,
-//                    sdk.myWalletSession.value!!
+//                    sdk.getWalletConnectSession()!!
 //                ).toString()
 //            }
 //        }
@@ -199,21 +193,21 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
 //            WalletConnectManager.connectWallet()
 //        }
 //        binding.createKyc.setOnClickListener {
-//            val walletAddress = sdk.myWalletSession.value?.getAvailableWallets()?.first()
+//            val walletAddress = sdk.getWalletConnectSession()?.getAvailableWallets()?.first()
 //                ?: throw Exception("No wallet found")
 //            lifecycleScope.launch {
 //                sdk.myKycSessions.add(
 //                    VerificationManager.createSession(
 //                        walletAddress,
-//                        sdk.myWalletSession.value!!
+//                        sdk.getWalletConnectSession()!!
 //                    )
 //                )
 //            }
 //        }
 //        binding.login.setOnClickListener {
 //            lifecycleScope.launch {
-//                sdk.myKycSessions.first().login()
-//                println("userID: ${sdk.myKycSessions.first().loggedIn}")
+//                sdk.getVerificationSession().login()
+//                println("userID: ${sdk.getVerificationSession().loggedIn}")
 //            }
 //        }
 //        binding.addPersonalInfoBtn.setOnClickListener {
@@ -223,30 +217,30 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
 //                isLegalEntity = false
 //            )
 //            lifecycleScope.launch {
-//                sdk.myKycSessions.first().setPersonalData(mockPersonalInfo)
-//                sdk.myKycSessions.first().resumeOnEmailConfirmed()
+//                sdk.getVerificationSession().setPersonalData(mockPersonalInfo)
+//                sdk.getVerificationSession().resumeOnEmailConfirmed()
 //            }
 //        }
 //        binding.startPersona.setOnClickListener {
 //            lifecycleScope.launch {
-//                sdk.myKycSessions.first().startIdentification(requireActivity())
+//                sdk.getVerificationSession().startIdentification(requireActivity())
 //            }
 //        }
 //        binding.selectNFT.setOnClickListener {
 //            lifecycleScope.launch {
-//                val images = sdk.myKycSessions.first().getNFTImages()
-//                sdk.myKycSessions.first().requestMinting(images.first().id, 3u)
+//                val images = sdk.getVerificationSession().getNFTImages()
+//                sdk.getVerificationSession().requestMinting(images.first().id, 3u)
 //            }
 //        }
 //        binding.mintNFT.setOnClickListener {
 //            lifecycleScope.launch {
-//                val url = sdk.myKycSessions.first().mint()
+//                val url = sdk.getVerificationSession().mint()
 //                println("probably done : $url")
 //            }
 //        }
 //        binding.resendEmail.setOnClickListener {
 //            lifecycleScope.launch {
-//                sdk.myKycSessions.first().resendConfirmationEmail()
+//                sdk.getVerificationSession().resendConfirmationEmail()
 //            }
 //        }
 //    }
