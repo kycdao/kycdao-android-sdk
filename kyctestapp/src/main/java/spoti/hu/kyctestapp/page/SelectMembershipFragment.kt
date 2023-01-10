@@ -55,12 +55,11 @@ class SelectMembershipFragment : BaseFragment<FragmentSelectMembershipBinding>()
     private fun setupTexts() {
         lifecycleScope.launch {
             selectedDuration.collect() { year ->
-                val verificationSession = sdk.getVerificationSession()
                 // Display yearly membership cost in dollars
-                val cost = verificationSession.getMembershipCostPerYear()
+                val cost = sdk.getVerificationSession().getMembershipCostPerYear()
                 binding.price.text = "$cost / year"
 
-                val paymentEstimation = verificationSession.estimatePayment(year.toUInt())
+                val paymentEstimation = sdk.getVerificationSession().estimatePayment(year.toUInt())
 
                 if (paymentEstimation.paymentAmount > BigInteger.valueOf(0)) {
                     binding.payment.text = paymentEstimation.paymentAmountText

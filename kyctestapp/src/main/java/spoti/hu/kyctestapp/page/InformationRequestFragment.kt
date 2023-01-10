@@ -30,8 +30,6 @@ class InformationRequestFragment : BaseFragment<FragmentInformationRequestBindin
     private fun setupDisclaimer() {
         binding.acceptDisclaimer.setOnCheckedChangeListener { _, isChecked ->
             lifecycleScope.launch {
-
-                //TODO: what if the user tick out
                 if (isChecked) {
                     sdk.getVerificationSession().acceptDisclaimer()
                 }
@@ -41,16 +39,22 @@ class InformationRequestFragment : BaseFragment<FragmentInformationRequestBindin
 
     private fun setupPersonalDataHandling() {
         binding.continueProcess.setOnClickListener {
-            val mockPersonalInfo = PersonalData(
-                email = "adamszucs2000@gmail.com",
-                residency = "HUN",
-                isLegalEntity = false
-            )
-            lifecycleScope.launch {
-                sdk.getVerificationSession().setPersonalData(mockPersonalInfo)
-                navigateWithAction(InformationRequestFragmentDirections.toConfirmEmailFragment())
+            if(checkIfEverythingIsFilledOut()){
+                val mockPersonalInfo = PersonalData(
+                    email = binding.emailInput.text.toString(),
+                    residency = "HUN",
+                    isLegalEntity = false
+                )
+                lifecycleScope.launch {
+                    sdk.getVerificationSession().setPersonalData(mockPersonalInfo)
+                    navigateWithAction(InformationRequestFragmentDirections.toConfirmEmailFragment())
+                }
             }
         }
+    }
+
+    private fun checkIfEverythingIsFilledOut(): Boolean{
+        return binding.emailInput.text?.isNotBlank() == true && binding.acceptDisclaimer.isChecked
     }
 
 

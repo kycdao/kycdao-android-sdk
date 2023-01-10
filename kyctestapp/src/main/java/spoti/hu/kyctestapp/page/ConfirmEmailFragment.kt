@@ -28,9 +28,7 @@ class ConfirmEmailFragment : BaseFragment<FragmentConfirmEmailBinding>() {
     private fun setupCheckEmailConfirm() {
         lifecycleScope.launch {
             sdk.getVerificationSession().resumeOnEmailConfirmed()
-
-            val verificationSession = sdk.getVerificationSession()
-            if (verificationSession.verificationStatus == VerificationStatus.VERIFIED) {
+            if (sdk.getVerificationSession().verificationStatus == VerificationStatus.VERIFIED) {
                 navigateWithAction(ConfirmEmailFragmentDirections.toSelectMembershipFragment())
             }else{
                 navigateWithAction(ConfirmEmailFragmentDirections.toPersonaFragment())

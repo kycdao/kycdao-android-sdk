@@ -36,8 +36,7 @@ class MintNFTFragment : BaseFragment<FragmentMintNftBinding>() {
 
     private fun setupText() {
         lifecycleScope.launch {
-            val verificationSession = sdk.getVerificationSession()
-            var mintingPrice = verificationSession.getMintingPrice()
+            val mintingPrice = sdk.getVerificationSession().getMintingPrice()
             binding.fee.text = mintingPrice.fullPriceText
         }
     }

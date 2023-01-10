@@ -25,13 +25,12 @@ class PersonaCompleteFragment : BaseFragment<FragmentPersonaCompleteBinding>() {
 
     private fun setupVerification() {
         lifecycleScope.launchWhenResumed {
-            val verificationSession = sdk.getVerificationSession()
-            if (verificationSession.verificationStatus == VerificationStatus.NOT_VERIFIED) {
+            if (sdk.getVerificationSession().verificationStatus == VerificationStatus.NOT_VERIFIED) {
                 //TODO: sign that it is a retry!
                 navigateWithAction(PersonaCompleteFragmentDirections.toPersonaFragment())
             } else {
                 //TODO: error handling?!
-                verificationSession.resumeWhenIdentified()
+                sdk.getVerificationSession().resumeWhenIdentified()
                 navigateWithAction(PersonaCompleteFragmentDirections.toSelectMembershipFragment())
             }
         }

@@ -100,7 +100,7 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
     }
 
 
-    class NFTCellAdapter() :
+    class NFTCellAdapter :
         RecyclerView.Adapter<NFTCellAdapter.ViewHolder>() {
 
         val dataSet: MutableList<TokenImage> = mutableListOf()
