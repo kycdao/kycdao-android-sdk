@@ -5,11 +5,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.navArgs
+import coil.load
 import kotlinx.coroutines.launch
+import spoti.hu.kyctestapp.R
 import spoti.hu.kyctestapp.base.BaseFragment
 import spoti.hu.kyctestapp.databinding.FragmentMintNftBinding
 
 class MintNFTFragment : BaseFragment<FragmentMintNftBinding>() {
+
+    val args by navArgs<MintNFTFragmentArgs>()
+
     override fun createBinding(
         inflater: LayoutInflater,
         container: ViewGroup?
@@ -21,8 +27,12 @@ class MintNFTFragment : BaseFragment<FragmentMintNftBinding>() {
         super.onViewCreated(view, savedInstanceState)
         setupText()
         setupMint()
+        setupNFTImage()
     }
 
+    private fun setupNFTImage(){
+        binding.artwork.load(args.url)
+    }
 
     private fun setupText() {
         lifecycleScope.launch {
@@ -35,9 +45,23 @@ class MintNFTFragment : BaseFragment<FragmentMintNftBinding>() {
     private fun setupMint() {
         binding.mintNFT.setOnClickListener {
             lifecycleScope.launch {
-                val url = sdk.myKycSessions.first().mint()
-                navigateWithAction(MintNFTFragmentDirections.toMintingSuccessfulFragment())
+                showMinting()
+                try {
+                    val url = sdk.myKycSessions.first().mint()
+                    navigateWithAction(MintNFTFragmentDirections.toMintingSuccessfulFragment())
+                } catch (e: Exception) {
+                    dismissMinting()
+                }
             }
         }
+    }
+
+    private fun showMinting() {
+        childFragmentManager.beginTransaction()
+            .add(R.id.loaderContainer, AuthorizeMintingFragment()).commit()
+    }
+
+    private fun dismissMinting() {
+        childFragmentManager.popBackStack()
     }
 }

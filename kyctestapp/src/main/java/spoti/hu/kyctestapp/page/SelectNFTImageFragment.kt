@@ -72,15 +72,32 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
         binding.selectNFT.setOnClickListener {
             lifecycleScope.launch {
                 //TODO: BRING DURATION HERE!!!
-                //TODO: till the requestminting is running show loading
-                selectedImage?.id?.let { it1 -> sdk.myKycSessions.first().requestMinting(it1, 3u) }
-                navigateWithAction(SelectNFTImageFragmentDirections.toMintNFTFragment())
+                showAuthorizing()
+                try {
+                    selectedImage?.let { img ->
+                        sdk.myKycSessions.first().requestMinting(img.id, 3u)
+                        navigateWithAction(SelectNFTImageFragmentDirections.toMintNFTFragment(img.url))
+                    }
+
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    dismissAuthorizing()
+                }
             }
         }
     }
 
+    private fun showAuthorizing() {
+        childFragmentManager.beginTransaction()
+            .add(R.id.loaderContainer, AuthorizeMintingFragment()).commit()
+    }
 
-    class NFTCellAdapter(val sessionId: String) :
+    private fun dismissAuthorizing() {
+        childFragmentManager.popBackStack()
+    }
+
+
+    class NFTCellAdapter() :
         RecyclerView.Adapter<NFTCellAdapter.ViewHolder>() {
 
         val dataSet: MutableList<TokenImage> = mutableListOf()
