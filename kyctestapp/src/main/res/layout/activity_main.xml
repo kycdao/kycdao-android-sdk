@@ -1,101 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    
-    android:orientation="vertical"
     tools:context=".MainActivity">
-    <ScrollView
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/nav_host_fragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <androidx.appcompat.widget.LinearLayoutCompat
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
-
-    <Button
-        android:id="@+id/connectWallet"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-            <TextView
-                android:id="@+id/walletTopicText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="wallet topic:"/>
-
-    <Button
-        android:id="@+id/createKyc"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="kycSession" />
-
-            <Button
-                android:id="@+id/getPerYear"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="GetPerYear" />
-
-            <Button
-                android:id="@+id/estimateCost"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="EstimateCost" />
-    <Button
-        android:id="@+id/login"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Login" />
-
-    <Button
-        android:id="@+id/addPersonalInfoBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="add personal" />
-            <Button
-                android:id="@+id/resendEmail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="resend" />
+        android:layout_height="0dp"
+        app:defaultNavHost="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navGraph="@navigation/navigation_main" />
 
 
-
-            <Button
-        android:id="@+id/startPersona"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="start persona" />
-
-    <Button
-        android:id="@+id/selectNFT"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="select Nft" />
-
-    <Button
-        android:id="@+id/mintNFT"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="mint NFT" />
-
-    <Button
-        android:id="@+id/hasTokenValid"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="has validToken" />
-
-    <Button
-        android:id="@+id/acceptDisclaimer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="accept disclaimer" />
-    <ImageView
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        android:id="@+id/qrImageView"
-        />
-        </androidx.appcompat.widget.LinearLayoutCompat>
-    </ScrollView>
-</androidx.appcompat.widget.LinearLayoutCompat>
+</androidx.constraintlayout.widget.ConstraintLayout>

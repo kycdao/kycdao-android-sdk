@@ -10,6 +10,7 @@ import com.bitraptors.networking.api.models.NetworkErrorResponse
 import com.bitraptors.networking.api.models.NetworkResponse
 import com.bitraptors.networking.api.models.NetworkType
 import kotlinx.coroutines.CompletableDeferred
+import okhttp3.Dispatcher
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -41,6 +42,7 @@ fun httpClient(
     timeOutInSec: Long
 ): OkHttpClient {
     val clientBuilder = OkHttpClient.Builder().apply {
+        dispatcher(Dispatcher().apply { maxRequestsPerHost = maxRequests })
         if (useLogging) addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         })

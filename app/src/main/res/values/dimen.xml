@@ -4,5 +4,8 @@
     <dimen name="wallet_item_height">80dp</dimen>
     <dimen name="step_item_height">120dp</dimen>
     <dimen name="spacing_normal">16dp</dimen>
+    <dimen name="spacing_4dp">4dp</dimen>
+    <dimen name="spacing_8dp">8dp</dimen>
+    <dimen name="spacing_32dp">32dp</dimen>
 
 </resources>
