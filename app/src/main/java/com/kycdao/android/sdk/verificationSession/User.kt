@@ -25,7 +25,7 @@ data class User(
 
 	fun verificationStatus(): VerificationStatus {
 		val statuses = verificationRequests.map {
-			if (it.verificationType == VerificationType.KYC) {
+			if (it.verificationType != VerificationType.KYC) {
 				VerificationStatus.NOT_VERIFIED
 			}
 			it.status

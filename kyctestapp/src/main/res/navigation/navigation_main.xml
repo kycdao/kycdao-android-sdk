@@ -178,6 +178,6 @@
         android:name="spoti.hu.kyctestapp.page.MintingInProgressFragment"
         tools:layout="@layout/fragment_minting_in_progress">
 
-    </fragment><action android:id="@+id/action_global_createSignatureFragment" app:destination="@id/createSignatureFragment"/><action android:id="@+id/action_global_informationRequestFragment" app:destination="@id/informationRequestFragment"/><action android:id="@+id/action_global_confirmEmailFragment" app:destination="@id/confirmEmailFragment"/><action android:id="@+id/action_global_personaFragment" app:destination="@id/personaFragment"/><action android:id="@+id/action_global_selectMembershipFragment" app:destination="@id/selectMembershipFragment"/>
+    </fragment><action android:id="@+id/action_global_createSignatureFragment" app:destination="@id/createSignatureFragment"/><action android:id="@+id/action_global_informationRequestFragment" app:destination="@id/informationRequestFragment"/><action android:id="@+id/action_global_confirmEmailFragment" app:destination="@id/confirmEmailFragment"/><action android:id="@+id/action_global_personaFragment" app:destination="@id/personaFragment"/><action android:id="@+id/action_global_selectMembershipFragment" app:destination="@id/selectMembershipFragment"/><action android:id="@+id/action_global_personaCompleteFragment" app:destination="@id/personaCompleteFragment"/>
 
 </navigation>

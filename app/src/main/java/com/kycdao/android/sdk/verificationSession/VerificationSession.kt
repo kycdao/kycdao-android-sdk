@@ -338,6 +338,8 @@ data class VerificationSession internal constructor(
 		} else {
 			personaSessionData = null
 		}
+		refreshUser()
+		Timber.d("IDENTIFICATIONRES: ${identificationResult is InquiryResponse.Complete}")
 		return when (identificationResult) {
 			is InquiryResponse.Complete -> IdentityFlowResult.COMPLETED
 			is InquiryResponse.Cancel -> IdentityFlowResult.CANCELLED
@@ -694,9 +696,9 @@ data class VerificationSession internal constructor(
 	 *
 	 * @return the estimated costs wrapped in a [PaymentEstimation] object.
 	 */
-	suspend fun estimatePayment(yearsPurchased: UInt): PaymentEstimation {
+	suspend fun estimatePayment(yearsPurchased: Int): PaymentEstimation {
 		refreshSession()
-		val membershipPayment = getRequiredMintCostForYears(yearsPurchased)
+		val membershipPayment = getRequiredMintCostForYears(yearsPurchased.toUInt())
 		val discountYears = sessionData.discountYears ?: 0
 		return PaymentEstimation(
 			paymentAmount = membershipPayment,

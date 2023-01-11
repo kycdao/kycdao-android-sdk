@@ -9,6 +9,7 @@ import com.kycdao.android.sdk.model.IdentityFlowResult
 import kotlinx.coroutines.launch
 import spoti.hu.kyctestapp.base.BaseFragment
 import spoti.hu.kyctestapp.databinding.FragmentPersonaBinding
+import timber.log.Timber
 
 class PersonaFragment : BaseFragment<FragmentPersonaBinding>() {
     override fun createBinding(
@@ -29,10 +30,11 @@ class PersonaFragment : BaseFragment<FragmentPersonaBinding>() {
             lifecycleScope.launch {
                 when (sdk.getVerificationSession().startIdentification(requireActivity())) {
                     IdentityFlowResult.COMPLETED -> {
-                        navigateWithAction(PersonaFragmentDirections.toPersonaCompleteFragment())
+                        Timber.d("Navigate next")
+                        navigateNext()
                     }
                     IdentityFlowResult.CANCELLED -> {
-
+                        Timber.d("Caneceled")
                     }
                 }
             }
