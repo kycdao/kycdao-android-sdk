@@ -56,7 +56,7 @@ class SelectMembershipFragment : BaseFragment<FragmentSelectMembershipBinding>()
         lifecycleScope.launch {
             selectedDuration.collect() { year ->
                 // Display yearly membership cost in dollars
-                val cost = sdk.getVerificationSession().getMembershipCostPerYear()
+                val cost = sdk.getVerificationSession().getMembershipCostPerYearText()
                 binding.price.text = "$cost / year"
 
                 val paymentEstimation = sdk.getVerificationSession().estimatePayment(year.toUInt())

@@ -44,7 +44,7 @@ class CreateSignatureFragment : BaseFragment<FragmentCreateSignatureBinding>() {
     }
 
     private fun navigateToInformationRequestPage() {
-        navigateWithAction(CreateSignatureFragmentDirections.toInformationRequestFragment())
+        navigateNext()
     }
 }
 

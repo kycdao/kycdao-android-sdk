@@ -97,7 +97,7 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
                                     sdk.getWalletConnectSession()
                                 )
                             )
-                            navigateWithAction(MainFragmentDirections.toCreateSignatureFragment())
+                            navigateNext()
                         } catch (e: Exception) {
                             Toast.makeText(
                                 requireContext(),

@@ -10,11 +10,15 @@ import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.GlobalContext.get
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import spoti.hu.kyctestapp.manager.SDKManager
 import spoti.hu.kyctestapp.manager.SDKManagerImpl
+import spoti.hu.kyctestapp.navigation.NavigationManager
+import spoti.hu.kyctestapp.navigation.NavigationManagerImpl
+import spoti.hu.kyctestapp.viewmodel.InformationRequestViewModel
 import timber.log.Timber
 
 
@@ -32,7 +36,8 @@ class KycApplication : Application(), ImageLoaderFactory {
             modules(
                 listOf(
                     modules,
-                    networkModule
+                    networkModule,
+                    viewModelsModule
                 )
             )
         }
@@ -66,8 +71,14 @@ val modules = module {
     single<SDKManager> {
         SDKManagerImpl()
     }
+    single<NavigationManager>{
+        NavigationManagerImpl(get())
+    }
 }
+val viewModelsModule = module {
+    viewModel { InformationRequestViewModel(get()) }
 
+}
 val networkModule = module {
     factory {
         httpClient(

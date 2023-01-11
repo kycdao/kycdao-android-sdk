@@ -159,7 +159,6 @@ data class VerificationSession internal constructor(
 	 */
 	fun getNFTImages(): List<TokenImage> {
 		return sessionData.user.availableImages.filter { it.imageType == ImageType.Identicon }
-		Timber.d("Images: ${getNFTImages()}")
 
 	}
 

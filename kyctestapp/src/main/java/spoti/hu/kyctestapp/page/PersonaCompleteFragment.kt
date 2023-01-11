@@ -30,7 +30,7 @@ class PersonaCompleteFragment : BaseFragment<FragmentPersonaCompleteBinding>() {
                 navigateWithAction(PersonaCompleteFragmentDirections.toPersonaFragment())
             } else {
                 //TODO: error handling?!
-                sdk.getVerificationSession().resumeWhenIdentified()
+                sdk.getVerificationSession().resumeOnVerificationCompleted()
                 navigateWithAction(PersonaCompleteFragmentDirections.toSelectMembershipFragment())
             }
         }
