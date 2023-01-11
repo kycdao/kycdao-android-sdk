@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.kycdao.android.sdk.model.PersonalData
 import kotlinx.coroutines.launch
@@ -39,21 +40,27 @@ class InformationRequestFragment : BaseFragment<FragmentInformationRequestBindin
 
     private fun setupPersonalDataHandling() {
         binding.continueProcess.setOnClickListener {
-            if(checkIfEverythingIsFilledOut()){
+            if (checkIfEverythingIsFilledOut()) {
                 val mockPersonalInfo = PersonalData(
                     email = binding.emailInput.text.toString(),
-                    residency = "HUN",
+                    residency = binding.countryInput.selectedItem.toString(),
                     isLegalEntity = false
                 )
                 lifecycleScope.launch {
                     sdk.getVerificationSession().setPersonalData(mockPersonalInfo)
                     navigateWithAction(InformationRequestFragmentDirections.toConfirmEmailFragment())
                 }
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Please fill out your personal data and accept the disclaimer.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
 
-    private fun checkIfEverythingIsFilledOut(): Boolean{
+    private fun checkIfEverythingIsFilledOut(): Boolean {
         return binding.emailInput.text?.isNotBlank() == true && binding.acceptDisclaimer.isChecked
     }
 

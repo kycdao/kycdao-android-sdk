@@ -28,8 +28,6 @@ class CreateSignatureFragment : BaseFragment<FragmentCreateSignatureBinding>() {
     private fun setupSignatureCreation() {
         binding.login.setOnClickListener {
             lifecycleScope.launchWhenResumed {
-
-
                 try {
                     sdk.getVerificationSession().login()
                     Timber.d("userID: ${sdk.getVerificationSession().loggedIn}")
