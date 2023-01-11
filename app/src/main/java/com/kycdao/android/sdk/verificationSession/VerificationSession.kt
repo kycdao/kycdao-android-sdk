@@ -163,6 +163,10 @@ data class VerificationSession internal constructor(
 
 	}
 
+	/**
+	 * Regenerates the list of available NFT images
+	 * @return A list of the newly generated images
+	 */
 	suspend fun regenerateNFTImages(): List<TokenImage> {
 		Timber.d("ORiginal: ${getNFTImages()}")
 
