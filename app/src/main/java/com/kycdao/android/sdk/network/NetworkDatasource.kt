@@ -12,10 +12,12 @@ interface NetworkDatasource {
     suspend fun updateUser(body: UpdateUserRequestBody) : UserDto
     suspend fun saveDisclaimer()
     suspend fun sendEmailConfirm()
+    suspend fun getSession() : SessionDto
     suspend fun getUser() : UserDto
     suspend fun getStatus() : StatusDto
     suspend fun authorizeMinting(body: AuthorizeMintingRequestBody) : AuthorizeMintingResponse
     suspend fun sendMintToken(body: MintTokenBody) : TokenDetailsDto
     suspend fun getSupportedNetworks() : List<Network>
+    suspend fun getNewIdenticons()
 
 }

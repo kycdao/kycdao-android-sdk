@@ -1,20 +1,17 @@
 package com.kycdao.android.sdk.verificationSession
 
-import android.media.session.MediaSession.Token
 import android.net.Uri
 import android.webkit.URLUtil
 import androidx.activity.ComponentActivity
 import com.bitraptors.networking.api.models.NetworkErrorResponse
 import com.kycdao.android.sdk.CustomKoinComponent
+import com.kycdao.android.sdk.contract.ERC721Contract
 import com.kycdao.android.sdk.dto.AuthorizeMintingResponse
 import com.kycdao.android.sdk.dto.TokenDetailsDto
 import com.kycdao.android.sdk.dto.UserDto
 import com.kycdao.android.sdk.exceptions.*
 import com.kycdao.android.sdk.model.*
-import com.kycdao.android.sdk.model.functions.ABIFunction
-import com.kycdao.android.sdk.model.functions.KYCGetRequiredMintCostForCodeFunction
-import com.kycdao.android.sdk.model.functions.KYCGetRequiredMintCostForSecondsFunction
-import com.kycdao.android.sdk.model.functions.KYCGetSubscriptionCostPerYearUSDFunction
+import com.kycdao.android.sdk.model.functions.*
 import com.kycdao.android.sdk.model.functions.mint.MintFunction
 import com.kycdao.android.sdk.model.functions.mint.MintingProperties
 import com.kycdao.android.sdk.model.functions.mint.MintingTransactionResult
@@ -34,8 +31,6 @@ import org.koin.core.component.get
 import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 import org.web3j.abi.FunctionEncoder
-import org.web3j.abi.datatypes.Function
-import org.web3j.abi.datatypes.Uint
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.methods.request.Transaction
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt
@@ -60,7 +55,7 @@ data class VerificationSession internal constructor(
 	private val kycConfig: SmartContractConfig?,
 	private val accreditedConfig: SmartContractConfig?,
 	private val personaData: Persona,
-	private val sessionData: SessionData,
+	private var sessionData: SessionData,
 	internal val rpcURL: String,
 	/**
 	 * The wallet session associated with this verification session, used to communicate with a wallet
@@ -97,6 +92,8 @@ data class VerificationSession internal constructor(
 	private val networkDatasource: NetworkDatasource by inject()
 	private var scope = CoroutineScope(Dispatchers.IO)
 
+	val hasMembership: Boolean get() = sessionData.user.hasMembership
+
 	/**
 	 * A unique identifier for this session
 	 */
@@ -119,6 +116,8 @@ data class VerificationSession internal constructor(
 	 */
 	val emailConfirmed: Boolean
 		get() = sessionData.user.isEmailConfirmed()
+	val currentEmail: String?
+		get() = sessionData.user.email
 
 	/**
 	 * Whether the user is logged in or not.
@@ -147,10 +146,12 @@ data class VerificationSession internal constructor(
 	private var emailPollJob: Job? = null
 	private var verificationPollJob: Job? = null
 
+	private var personaSessionData: PersonaSessionData? = null
 
-	private fun loginProof(): String {
-		return "kycDAO-login-${sessionData.nonce}"
-	}
+
+	private val loginProof: String
+		get() = "kycDAO-login-${sessionData.nonce}"
+
 
 	/**
 	 * Provides the user selectable NFT images
@@ -158,6 +159,21 @@ data class VerificationSession internal constructor(
 	 */
 	fun getNFTImages(): List<TokenImage> {
 		return sessionData.user.availableImages.filter { it.imageType == ImageType.Identicon }
+		Timber.d("Images: ${getNFTImages()}")
+
+	}
+
+	/**
+	 * Regenerates the list of available NFT images
+	 * @return A list of the newly generated images
+	 */
+	suspend fun regenerateNFTImages(): List<TokenImage> {
+		Timber.d("ORiginal: ${getNFTImages()}")
+
+		networkDatasource.getNewIdenticons()
+		refreshUser()
+
+		return getNFTImages()
 	}
 
 
@@ -168,18 +184,27 @@ data class VerificationSession internal constructor(
 	suspend fun login() {
 		val signature: String?
 		try {
-			signature = walletSession.personalSign(walletAddress, loginProof())
+			signature = walletSession.personalSign(walletAddress, loginProof)
 		} catch (e: Exception) {
 			throw PersonalSignException(e)
 		}
 		Timber.d("---------- Input ----------")
 		Timber.e("signature: $signature")
 		val userDto: UserDto?
-
-		userDto = networkDatasource.login(LoginRequestBody(signature))
-		Timber.d("---------- Output ----------")
-		Timber.e("userDto: $userDto")
-		sessionData.user = userDto.mapToKycUser()
+		try {
+			userDto = networkDatasource.login(LoginRequestBody(signature))
+			Timber.d("---------- Output ----------")
+			Timber.e("userDto: $userDto")
+			sessionData.user = userDto.mapToKycUser()
+		} catch (e: KycNetworkCallException) {
+			if (e.networkException is NetworkErrorResponse.ApiError) {
+				if (e.networkException.body.error_code != "SessionUserAlreadyExists") {
+					throw UserAlreadyLoggedIn()
+				}
+			} else {
+				throw e
+			}
+		}
 
 	}
 
@@ -239,19 +264,33 @@ data class VerificationSession internal constructor(
 		} catch (e: Exception) {
 			throw SendTransactionException(e)
 		}
+
 		Timber.d("Receipt hash: ${result.txHash}")
+
 		val receipt = continueWhenTransactionFinished(result.txHash)
-		val tokenId: String?
+		Timber.d("LOGS: ${receipt.transactionReceipt.get().logs}")
+		var tokenId: String? = null
 		try {
-			tokenId = receipt.transactionReceipt.get().logs[0].topics[3]
+			for (log in receipt.transactionReceipt.get().logs) {
+				val result = ERC721Contract.getTopicID(log)
+				if (result != null) {
+					tokenId = result
+					break
+				}
+			}
 		} catch (e: Exception) {
 			throw GenericKycException(
 				"Token id not found inside the transaction receipt",
 				e.cause
 			)
 		}
-		val decimalTokenId = tokenId.convertBigInteger().toString(10)
-		val tokenDetails = tokenMinted(authCode, decimalTokenId, result.txHash)
+		if (tokenId == null) {
+			throw GenericKycException(
+				"Token id not found inside the transaction receipt", null
+			)
+		}
+		Timber.d("TOKENID: $tokenId")
+		val tokenDetails = tokenMinted(authCode, tokenId, result.txHash)
 
 		this.authorizeMintingResponse = null
 
@@ -285,8 +324,20 @@ data class VerificationSession internal constructor(
 				templateId = personaData.templateID,
 				activity = activity,
 				resultContinuation = continuation,
-				environment = personaData.environment
+				environment = personaData.environment,
+				personaSessionData = personaSessionData
 			)
+		}
+		if (identificationResult is InquiryResponse.Cancel) {
+			identificationResult.inquiryId?.let { inquiryId ->
+				personaSessionData = PersonaSessionData(
+					referenceId = referenceID,
+					inquiryId = inquiryId,
+					sessionToken = identificationResult.sessionToken
+				)
+			}
+		} else {
+			personaSessionData = null
 		}
 		return when (identificationResult) {
 			is InquiryResponse.Complete -> IdentityFlowResult.COMPLETED
@@ -410,12 +461,17 @@ data class VerificationSession internal constructor(
 		sessionData.user = updatedUser
 	}
 
+	private suspend fun refreshSession() {
+		val updatedSession = networkDatasource.getSession().mapToSessionData()
+		sessionData = updatedSession
+	}
+
 	private suspend fun updateUserPersonalData(personalData: PersonalData) {
 		val userDto = networkDatasource.updateUser(
 			UpdateUserRequestBody(
 				email = personalData.email,
 				residency = personalData.residency,
-				legal_entity = personalData.isLegalEntity,
+				legal_entity = false,
 			)
 		)
 		val userFromNetwork = userDto.mapToKycUser()
@@ -465,7 +521,7 @@ data class VerificationSession internal constructor(
 	 * After a 100 retries it stops with a [SuspensionTimeOutException].
 	 * @see startIdentification
 	 */
-	suspend fun resumeWhenIdentified() {
+	suspend fun resumeOnVerificationCompleted() {
 		verificationPollJob?.cancel()
 		var timeOutCounter = 0
 		verificationPollJob = scope.launch {
@@ -510,7 +566,6 @@ data class VerificationSession internal constructor(
 		val personalData = PersonalData(
 			email = email,
 			residency = residency,
-			isLegalEntity = isLegalEntity
 		)
 		updateUserPersonalData(personalData)
 	}
@@ -544,7 +599,7 @@ data class VerificationSession internal constructor(
 	private suspend fun continueWhenTransactionFinished(txHash: String): EthGetTransactionReceipt {
 		var timeOutCounter = 0
 		while (true) {
-			if (timeOutCounter > 50) {
+			if (timeOutCounter > 100) {
 				throw SuspensionTimeOutException
 			} else {
 				timeOutCounter++
@@ -587,13 +642,22 @@ data class VerificationSession internal constructor(
 	 *
 	 * @return the price of subscription per year in USD
 	 */
-	suspend fun getMembershipCostPerYear(): BigInteger {
+	suspend fun getMembershipCostPerYearText(): String {
 		val getSubscriptionCostFunction = ABIFunction<BigInteger>(
 			function = KYCGetSubscriptionCostPerYearUSDFunction(),
 			contractAddress = getKycContractAddress(),
 			walletAddress = walletAddress
 		)
-		return web3j.callABIFunction(getSubscriptionCostFunction)
+		val getDecimalFunction = ABIFunction<BigInteger>(
+			function = KYCGetSubscriptionCostDecimalFunction(),
+			contractAddress = getKycContractAddress(),
+			walletAddress = walletAddress
+		)
+		val rawPrice = scope.async { web3j.callABIFunction(getSubscriptionCostFunction) }
+		val decimal = scope.async { web3j.callABIFunction(getDecimalFunction) }
+		val divider = BigInteger.TEN.pow(decimal.await().intValueExact())
+		val price = rawPrice.await().toBigDecimal().divide(divider.toBigDecimal())
+		return price.toString()
 	}
 
 	private suspend fun getRawRequiredMintCostForCode(authCode: String): BigInteger {
@@ -632,6 +696,7 @@ data class VerificationSession internal constructor(
 	 * @return the estimated costs wrapped in a [PaymentEstimation] object.
 	 */
 	suspend fun estimatePayment(yearsPurchased: UInt): PaymentEstimation {
+		refreshSession()
 		val membershipPayment = getRequiredMintCostForYears(yearsPurchased)
 		val discountYears = sessionData.discountYears ?: 0
 		return PaymentEstimation(
