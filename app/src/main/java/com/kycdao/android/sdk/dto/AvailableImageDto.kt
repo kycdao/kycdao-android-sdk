@@ -4,14 +4,15 @@ import com.kycdao.android.sdk.model.ImageType
 import com.kycdao.android.sdk.model.TokenImage
 
 data class AvailableImageDto(
-	val image_type: ImageType,
-	val url: String,
+    val image_type: ImageType,
+    val url: String,
 ) {
-	fun mapToAvailableImage(id: String): TokenImage {
-		return TokenImage(
-			id,
-			imageType = image_type,
-			url = url
-		)
-	}
+    fun mapToAvailableImage(id: String, extId: String): TokenImage {
+        return TokenImage(
+            id,
+			extId,
+            imageType = image_type,
+            url = url
+        )
+    }
 }

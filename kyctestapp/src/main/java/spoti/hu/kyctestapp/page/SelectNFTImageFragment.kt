@@ -12,9 +12,11 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.kycdao.android.sdk.model.TokenImage
 import kotlinx.coroutines.launch
+import okhttp3.Headers
 import spoti.hu.kyctestapp.R
 import spoti.hu.kyctestapp.base.BaseFragment
 import spoti.hu.kyctestapp.databinding.FragmentSelectNftImageBinding
+import spoti.hu.kyctestapp.manager.SDKManager
 
 class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
 
@@ -37,7 +39,7 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
     private var selectedImage: TokenImage? = null
 
     private fun setupNFTs() {
-        val adapter = NFTCellAdapter()
+        val adapter = NFTCellAdapter(sdk)
         binding.nftList.adapter = adapter
 
         val snapHelper = PagerSnapHelper()
@@ -79,7 +81,7 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
                 try {
                     selectedImage?.let { img ->
                         sdk.getVerificationSession().requestMinting(img.id, args.duration.toUInt())
-                        navigateWithAction(SelectNFTImageFragmentDirections.toMintNFTFragment(img.url))
+                        navigateWithAction(SelectNFTImageFragmentDirections.toMintNFTFragment(img.getUrl()))
                     }
 
                 } catch (e: Exception) {
@@ -100,7 +102,7 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
     }
 
 
-    class NFTCellAdapter :
+    class NFTCellAdapter(val sdk : SDKManager) :
         RecyclerView.Adapter<NFTCellAdapter.ViewHolder>() {
 
         val dataSet: MutableList<TokenImage> = mutableListOf()
@@ -127,7 +129,7 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
         }
 
         override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-            viewHolder.artwork.load(dataSet[position].url)
+            viewHolder.artwork.load("https://staging.kycdao.xyz/api/public/token/identicon/SGFUra8sLPuTgi3daNgFAJoPkgs518?user_id=STA309EDBEF7-0000000292")
         }
 
         override fun getItemCount() = dataSet.size

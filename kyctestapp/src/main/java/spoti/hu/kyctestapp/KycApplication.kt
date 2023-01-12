@@ -3,6 +3,7 @@ package spoti.hu.kyctestapp
 import android.app.Application
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import coil.decode.SvgDecoder
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import com.bitraptors.networking.api.httpClient
@@ -37,7 +38,6 @@ class KycApplication : Application(), ImageLoaderFactory {
             modules(
                 listOf(
                     modules,
-                    networkModule,
                     viewModelsModule
                 )
             )
@@ -46,6 +46,9 @@ class KycApplication : Application(), ImageLoaderFactory {
 
     override fun newImageLoader(): ImageLoader {
         return ImageLoader.Builder(this)
+            .components {
+                add(SvgDecoder.Factory())
+            }
             .memoryCache {
                 MemoryCache.Builder(this)
                     // Set the max size to 25% of the app's available memory.
@@ -57,10 +60,6 @@ class KycApplication : Application(), ImageLoaderFactory {
                     .directory(filesDir.resolve("image_cache"))
                     .maxSizeBytes(512L * 1024 * 1024) // 512MB
                     .build()
-            }
-            .okHttpClient {
-                val okHttpClient : OkHttpClient = get()
-                okHttpClient
             }
             .crossfade(true)
             .respectCacheHeaders(false)
@@ -80,13 +79,4 @@ val viewModelsModule = module {
     viewModel { InformationRequestViewModel(get()) }
     viewModel { SelectMembershipViewModel(get()) }
 
-}
-val networkModule = module {
-    factory {
-        httpClient(
-            interceptors = arrayOf(CallInterceptorFactory(get()).createHeaderChangingInterceptor()),
-            useLogging = BuildConfig.DEBUG,
-            timeOutInSec = 20
-        )
-    }
 }

@@ -29,7 +29,7 @@ data class UserDto(
             emailConfirmed = email_confirmed,
             disclaimerAccepted = disclaimer_accepted,
             verificationRequests = verification_requests.map { it.mapToVerificationRequest() },
-            availableImages = available_images.map { it.value.mapToAvailableImage(it.key) },
+            availableImages = available_images.map { it.value.mapToAvailableImage(it.key, ext_id) },
             blockchainAccounts = blockchain_accounts.map { it.mapToBlockchainAccount() },
             subscriptionExpiryDate = if(subscription_expiry!= null) format.parse(subscription_expiry)else null
         )
