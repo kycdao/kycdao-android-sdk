@@ -18,6 +18,7 @@ import spoti.hu.kyctestapp.manager.SDKManager
 import spoti.hu.kyctestapp.manager.SDKManagerImpl
 import spoti.hu.kyctestapp.navigation.NavigationManager
 import spoti.hu.kyctestapp.navigation.NavigationManagerImpl
+import spoti.hu.kyctestapp.viewmodel.ConfirmEmailViewModel
 import spoti.hu.kyctestapp.viewmodel.InformationRequestViewModel
 import spoti.hu.kyctestapp.viewmodel.SelectMembershipViewModel
 import timber.log.Timber
@@ -79,6 +80,7 @@ val modules = module {
 val viewModelsModule = module {
     viewModel { InformationRequestViewModel(get()) }
     viewModel { SelectMembershipViewModel(get()) }
+    viewModel { ConfirmEmailViewModel(get()) }
 
 }
 val networkModule = module {

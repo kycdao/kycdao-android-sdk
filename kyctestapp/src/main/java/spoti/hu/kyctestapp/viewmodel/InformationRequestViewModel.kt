@@ -12,18 +12,23 @@ class InformationRequestViewModel(
 	private val sdkManager: SDKManager
 ) : ViewModel() {
 
-	 val disclaimerAccepted = MutableStateFlow(false)
+	val disclaimerAccepted = MutableStateFlow(false)
+	val disclaimerText = sdkManager.getVerificationSession().disclaimerText
+	val privacyPolicyURL = sdkManager.getVerificationSession().privacyPolicy
+	val termsOfServiceURL = sdkManager.getVerificationSession().termsOfService
 
-	 val email = MutableStateFlow("")
-	 val residency = MutableStateFlow("")
+	val email = MutableStateFlow("")
+	val residency = MutableStateFlow("")
 
-	val eventBus : MutableSharedFlow<UIEvent> = MutableSharedFlow(extraBufferCapacity = 1)
+	val eventBus: MutableSharedFlow<UIEvent> = MutableSharedFlow(extraBufferCapacity = 1)
 
-	val canProceed = combine(disclaimerAccepted, email, residency){ disclaimerAccepted, email, residency ->
-		disclaimerAccepted && email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches() && residency.isNotEmpty()
-	}.distinctUntilChanged()
+	val canProceed =
+		combine(disclaimerAccepted, email, residency) { disclaimerAccepted, email, residency ->
+			disclaimerAccepted && email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email)
+				.matches() && residency.isNotEmpty()
+		}.distinctUntilChanged()
 
-	fun continueProcess(){
+	fun continueProcess() {
 		val session = sdkManager.getVerificationSession()
 		viewModelScope.launch {
 			session.acceptDisclaimer()
@@ -38,6 +43,6 @@ class InformationRequestViewModel(
 }
 
 
-sealed class UIEvent{
-	object NavigateNext: UIEvent()
+sealed class UIEvent {
+	object NavigateNext : UIEvent()
 }

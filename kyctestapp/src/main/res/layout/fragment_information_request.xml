@@ -49,6 +49,37 @@
         app:layout_constraintTop_toBottomOf="@+id/emailInput"
         tools:listitem="@android:layout/simple_spinner_dropdown_item" />
 
+    <TextView
+        android:id="@+id/disclaimer_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/countryInput"
+        android:text="@string/disclaimer" />
+
+    <TextView
+        android:id="@+id/disclaimer_text"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:scrollbars="vertical"
+        tools:text="dadwda"
+        app:layout_constraintBottom_toTopOf="@+id/accept_text"
+        app:layout_constraintTop_toBottomOf="@+id/disclaimer_label"
+        tools:layout_editor_absoluteX="16dp" />
+
+    <TextView
+        android:id="@+id/accept_text"
+        android:linksClickable="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="@string/tos_text"
+        app:layout_constraintBottom_toTopOf="@+id/acceptDisclaimer"
+        tools:layout_editor_absoluteX="16dp" />
+
     <CheckBox
         android:id="@+id/acceptDisclaimer"
         android:layout_width="wrap_content"

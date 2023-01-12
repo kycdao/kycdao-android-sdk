@@ -1,18 +1,18 @@
 package spoti.hu.kyctestapp.page
 
 import android.os.Bundle
+import android.text.Html
+import android.text.method.LinkMovementMethod
+import android.text.method.ScrollingMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.kycdao.android.sdk.model.PersonalData
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -41,7 +41,20 @@ class InformationRequestFragment : BaseFragment<FragmentInformationRequestBindin
 		setupInputListener()
 		setupPersonalDataHandling()
 		listenToEvents()
+		setupTexts()
 		listenToButtonEnabled()
+	}
+
+	private fun setupTexts() {
+		binding.disclaimerText.text = viewModel.disclaimerText
+		binding.disclaimerText.movementMethod = ScrollingMovementMethod()
+
+		binding.acceptText.apply {
+			isClickable = true
+			movementMethod = LinkMovementMethod.getInstance()
+			val rawText = "By starting the verification you accept <a href='${viewModel.privacyPolicyURL}'>Privacy Policy</a> and <a href='${viewModel.termsOfServiceURL}'>Terms & Conditions.</a>"
+			text = Html.fromHtml(rawText, Html.FROM_HTML_MODE_COMPACT)
+		}
 	}
 
 	private fun setupDisclaimer() {
