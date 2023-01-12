@@ -22,6 +22,8 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
 
     private val args by navArgs<SelectNFTImageFragmentArgs>()
 
+    private val adapter = NFTCellAdapter(sdk)
+
     override fun createBinding(
         inflater: LayoutInflater,
         container: ViewGroup?
@@ -34,12 +36,21 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
 
         setupNFTs()
         setupSelectNFT()
+        setupRegenerateNFTs()
+    }
+
+    private fun setupRegenerateNFTs() {
+        binding.regenerateNFT.setOnClickListener {
+            lifecycleScope.launch{
+                val newImages = sdk.getVerificationSession().regenerateNFTImages()
+                adapter.setData(newImages)
+            }
+        }
     }
 
     private var selectedImage: TokenImage? = null
 
     private fun setupNFTs() {
-        val adapter = NFTCellAdapter(sdk)
         binding.nftList.adapter = adapter
 
         val snapHelper = PagerSnapHelper()
@@ -129,7 +140,7 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
         }
 
         override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-            viewHolder.artwork.load("https://staging.kycdao.xyz/api/public/token/identicon/SGFUra8sLPuTgi3daNgFAJoPkgs518?user_id=STA309EDBEF7-0000000292")
+            viewHolder.artwork.load(dataSet[position].getUrl())
         }
 
         override fun getItemCount() = dataSet.size

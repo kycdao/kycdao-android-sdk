@@ -57,7 +57,7 @@ class MintNFTFragment : BaseFragment<FragmentMintNftBinding>() {
 
     private fun showMinting() {
         childFragmentManager.beginTransaction()
-            .add(R.id.loaderContainer, AuthorizeMintingFragment()).commit()
+            .add(R.id.loaderContainer, MintingInProgressFragment()).commit()
     }
 
     private fun dismissMinting() {

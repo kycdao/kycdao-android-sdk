@@ -29,7 +29,6 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
         super.onCreate(savedInstanceState)
 
         Timber.plant(Timber.DebugTree());
-        Timber.d("CREATE")
         VerificationManager.configure(
             VerificationManager.Configuration(KycDaoEnvironment.Development)
         )
