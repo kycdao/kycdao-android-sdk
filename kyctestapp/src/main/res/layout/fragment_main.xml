@@ -5,7 +5,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
     android:orientation="vertical"
     tools:context=".MainActivity">
 
@@ -32,7 +31,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_32dp"
-                    android:text="Verification Flow"
+                    android:text="Connect Wallet"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
@@ -51,7 +50,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_4dp"
-                    android:text="Start Verification Flow"
+                    android:text="Connect wallet"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/separator1" />
 
@@ -89,9 +89,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_4dp"
-                    android:text="Has the address had a valid token?"
+                    android:text="Check address for valid token"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/polygonWalletAddress" />
+
 
 <!--                <androidx.appcompat.widget.AppCompatTextView-->
                 <!--                    android:id="@+id/title3"-->

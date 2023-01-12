@@ -45,4 +45,5 @@ class InformationRequestViewModel(
 
 sealed class UIEvent {
 	object NavigateNext : UIEvent()
+
 }

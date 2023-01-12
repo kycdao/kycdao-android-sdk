@@ -19,7 +19,7 @@ import spoti.hu.kyctestapp.viewmodel.ConfirmEmailViewModel
 import spoti.hu.kyctestapp.viewmodel.InformationRequestViewModel
 
 class ConfirmEmailFragment : BaseFragment<FragmentConfirmEmailBinding>() {
-    val viewModel: ConfirmEmailViewModel by viewModel()
+    private val viewModel: ConfirmEmailViewModel by viewModel()
 
     override fun createBinding(
         inflater: LayoutInflater,

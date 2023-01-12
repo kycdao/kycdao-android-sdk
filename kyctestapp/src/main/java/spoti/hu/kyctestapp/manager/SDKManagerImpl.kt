@@ -2,8 +2,7 @@ package spoti.hu.kyctestapp.manager
 
 import com.kycdao.android.sdk.verificationSession.VerificationSession
 import com.kycdao.android.sdk.wallet.WalletConnectSession
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 
 class SDKManagerImpl : SDKManager {
     private var myWalletSession = MutableStateFlow<WalletConnectSession?>(null)
@@ -15,6 +14,8 @@ class SDKManagerImpl : SDKManager {
     override fun saveVerificationSession(session: VerificationSession) {
         myKycSessions.update { session }
     }
+
+    override val connectedWalletID: Flow<String> = myWalletSession.map { it?.id ?: "Unknown" }
 
     override fun getWalletConnectSession(): WalletConnectSession {
         return myWalletSession.value

@@ -19,7 +19,7 @@ import java.math.BigInteger
 
 class SelectMembershipFragment : BaseFragment<FragmentSelectMembershipBinding>() {
 
-	val viewModel: SelectMembershipViewModel by viewModel()
+	private val viewModel: SelectMembershipViewModel by viewModel()
 
 
 	override fun createBinding(

@@ -224,14 +224,14 @@ data class VerificationSession internal constructor(
 	 * Authorizes the minting process for a selected NFT image
 	 * Returns after the minting of the selected NFT has been authorized
 	 *
-	 * The list of available images can be acquired by calling the [getNFTImages] function.
+	 * The list of available images can be acquired by calling the [getNFTImages] function.x
 	 *
 	 * @param selectedImage the ID of the NFT image that is about to be minted
 	 * @param membershipDuration the number of years the membership is requested.
 	 */
-	suspend fun requestMinting(selectedImage: String, membershipDuration: UInt) {
+	suspend fun requestMinting(selectedImage: String, membershipDuration: UInt?) {
 		Timber.d("Selected Nft Image: $selectedImage")
-		authorizeMintingOfNFT(selectedImage, membershipDuration)
+		authorizeMintingOfNFT(selectedImage, membershipDuration ?: 0u)
 		checkAuthorizeMinting()
 	}
 

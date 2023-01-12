@@ -91,7 +91,8 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
                 showAuthorizing()
                 try {
                     selectedImage?.let { img ->
-                        sdk.getVerificationSession().requestMinting(img.id, args.duration.toUInt())
+                        val duration = args.duration.toUInt()
+                        sdk.getVerificationSession().requestMinting(img.id, duration)
                         navigateWithAction(SelectNFTImageFragmentDirections.toMintNFTFragment(img.getUrl()))
                     }
 
