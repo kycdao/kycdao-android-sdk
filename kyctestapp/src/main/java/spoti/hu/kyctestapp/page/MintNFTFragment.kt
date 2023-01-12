@@ -46,8 +46,8 @@ class MintNFTFragment : BaseFragment<FragmentMintNftBinding>() {
             lifecycleScope.launch {
                 showMinting()
                 try {
-                    val url = sdk.getVerificationSession().mint()
-                    navigateWithAction(MintNFTFragmentDirections.toMintingSuccessfulFragment())
+                    val mintingResult = sdk.getVerificationSession().mint()
+                    navigateWithAction(MintNFTFragmentDirections.toMintingSuccessfulFragment(mintingResult.explorerURL.toString()))
                 } catch (e: Exception) {
                     dismissMinting()
                 }

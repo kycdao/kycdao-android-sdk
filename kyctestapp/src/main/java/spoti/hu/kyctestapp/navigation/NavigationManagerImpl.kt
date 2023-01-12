@@ -19,6 +19,7 @@ class NavigationManagerImpl(private val sdkManager: SDKManager) : NavigationMana
 			verificationSession.verificationStatus == VerificationStatus.PROCESSING -> R.id.action_global_personaCompleteFragment
 			verificationSession.verificationStatus == VerificationStatus.NOT_VERIFIED -> R.id.action_global_personaFragment
 			!verificationSession.hasMembership -> R.id.action_global_selectMembershipFragment
+			verificationSession.hasMembership -> R.id.action_global_selectNFTImageFragment
 			else -> throw Exception("Destination can not be determined")
 		}
 	}

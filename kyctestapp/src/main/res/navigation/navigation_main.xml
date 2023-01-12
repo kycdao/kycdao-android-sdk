@@ -162,6 +162,9 @@
         android:name="spoti.hu.kyctestapp.page.MintingSuccessfulFragment"
         tools:layout="@layout/fragment_minting_succesful">
 
+        <argument
+            android:name="explorer_url"
+            app:argType="string" />
     </fragment>
 
 
@@ -178,6 +181,6 @@
         android:name="spoti.hu.kyctestapp.page.MintingInProgressFragment"
         tools:layout="@layout/fragment_minting_in_progress">
 
-    </fragment><action android:id="@+id/action_global_createSignatureFragment" app:destination="@id/createSignatureFragment"/><action android:id="@+id/action_global_informationRequestFragment" app:destination="@id/informationRequestFragment"/><action android:id="@+id/action_global_confirmEmailFragment" app:destination="@id/confirmEmailFragment"/><action android:id="@+id/action_global_personaFragment" app:destination="@id/personaFragment"/><action android:id="@+id/action_global_selectMembershipFragment" app:destination="@id/selectMembershipFragment"/><action android:id="@+id/action_global_personaCompleteFragment" app:destination="@id/personaCompleteFragment"/>
+    </fragment><action android:id="@+id/action_global_createSignatureFragment" app:destination="@id/createSignatureFragment"/><action android:id="@+id/action_global_informationRequestFragment" app:destination="@id/informationRequestFragment"/><action android:id="@+id/action_global_confirmEmailFragment" app:destination="@id/confirmEmailFragment"/><action android:id="@+id/action_global_personaFragment" app:destination="@id/personaFragment"/><action android:id="@+id/action_global_selectMembershipFragment" app:destination="@id/selectMembershipFragment"/><action android:id="@+id/action_global_personaCompleteFragment" app:destination="@id/personaCompleteFragment"/><action android:id="@+id/action_global_selectNFTImageFragment" app:destination="@id/selectNFTImageFragment"/>
 
 </navigation>
