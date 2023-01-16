@@ -101,8 +101,10 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 	}
 
 	fun stopListening() {
-		wcSession?.removeListener()
-		isListening = false
+		if(isListening) {
+			wcSession?.removeListener()
+			isListening = false
+		}
 	}
 
 

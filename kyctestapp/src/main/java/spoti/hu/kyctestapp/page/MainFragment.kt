@@ -91,6 +91,7 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
 							Timber.d("SUCCESS wc")
 							sdk.saveWalletConnectSession(result.data)
 							delay(500)
+							WalletConnectManager.stopListening()
 							navigateWithAction(MainFragmentDirections.actionMainFragmentToWalletConnectedFragment())
 						}
 					}

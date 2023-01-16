@@ -9,6 +9,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.kycdao.android.sdk.verificationSession.VerificationManager
+import com.kycdao.android.sdk.wallet.WalletConnectManager
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import spoti.hu.kyctestapp.base.BaseFragment

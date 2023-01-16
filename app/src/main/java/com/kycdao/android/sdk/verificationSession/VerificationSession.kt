@@ -167,8 +167,6 @@ data class VerificationSession internal constructor(
 	 * @return A list of the newly generated images
 	 */
 	suspend fun regenerateNFTImages(): List<TokenImage> {
-		Timber.d("ORiginal: ${getNFTImages()}")
-
 		networkDatasource.getNewIdenticons()
 		refreshUser()
 
@@ -179,6 +177,8 @@ data class VerificationSession internal constructor(
 	/**
 	 * Logs in the user to the current session
 	 * The user will be redirected to their wallet, where they will have to sign a session data in order to login
+	 *
+	 * @throws UserAlreadyLoggedIn If there is already a session for this user. To prevent this, only call this function if the [loggedIn] value is false.
 	 */
 	suspend fun login() {
 		val signature: String?
@@ -212,6 +212,8 @@ data class VerificationSession internal constructor(
 	 * If the provided email address is not yet confirmed then a confirmation email will be sent.
 	 *
 	 * @param personalData The personal information required, wrapped in a [PersonalData] class
+	 *
+	 * @throws VerificationSessionIllegalAction Throws this exception if the disclaimer is not yet accepted
 	 */
 	suspend fun setPersonalData(personalData: PersonalData) {
 		if (!disclaimerAccepted)
@@ -228,10 +230,12 @@ data class VerificationSession internal constructor(
 	 *
 	 * @param selectedImage the ID of the NFT image that is about to be minted
 	 * @param membershipDuration the number of years the membership is requested.
+	 *
+	 * @throws NoBlockChainAccountFound Throws this if the user does not have a blockchain account.
 	 */
-	suspend fun requestMinting(selectedImage: String, membershipDuration: UInt?) {
+	suspend fun requestMinting(selectedImage: String, membershipDuration: Int?) {
 		Timber.d("Selected Nft Image: $selectedImage")
-		authorizeMintingOfNFT(selectedImage, membershipDuration ?: 0u)
+		authorizeMintingOfNFT(selectedImage, membershipDuration?.toUInt() ?: 0u)
 		checkAuthorizeMinting()
 	}
 
@@ -243,6 +247,9 @@ data class VerificationSession internal constructor(
 	 * @return An URL for an explorer where the minting transaction can be viewed
 	 *
 	 * @param performTransaction Lambda function which contains the actual minting call, using the WalletSession interface
+	 *
+	 * @throws SendTransactionException Throws this if there was an error while sending the minting transaction to the wallet. The original exception is wrapped inside.
+	 * @throws GenericKycException Throws this if a token id is not present in the transaction receipt.
 	 */
 	suspend fun mint(): MintingResult {
 		val authCode =
@@ -310,6 +317,9 @@ data class VerificationSession internal constructor(
 	 *
 	 * @return The result of the identity verification flow. It only tells whether the user completed the identity flow or cancelled it. Information regarding the validity of the identity verification can be accessed at [verificationStatus]
 	 * @see resumeOnVerificationCompleted
+	 *
+	 * @throws VerificationSessionIllegalAction If the email is not yet confirmed
+	 * @throws PersonaException.PersonaVerificationFailed If the Persona verification process produced an unexpected error
 	 */
 	suspend fun startIdentification(activity: ComponentActivity): IdentityFlowResult {
 		if (!emailConfirmed)
@@ -339,7 +349,6 @@ data class VerificationSession internal constructor(
 			personaSessionData = null
 		}
 		refreshUser()
-		Timber.d("IDENTIFICATIONRES: ${identificationResult is InquiryResponse.Complete}")
 		return when (identificationResult) {
 			is InquiryResponse.Complete -> IdentityFlowResult.COMPLETED
 			is InquiryResponse.Cancel -> IdentityFlowResult.CANCELLED
@@ -387,6 +396,8 @@ data class VerificationSession internal constructor(
 	 * Creates an estimation for the fee of minting.
 	 *
 	 * @return The estimated fee wrapped in a [PriceEstimation]
+	 *
+	 * @throws VerificationSessionIllegalAction If there is no active authorized minting process
 	 */
 	suspend fun getMintingPrice(): PriceEstimation {
 		val authCode =
@@ -410,6 +421,7 @@ data class VerificationSession internal constructor(
 	 * Sends a confirmation email to the [provided][setPersonalData] email address if the address in question has not been confirmed previously.
 	 *
 	 * @see resumeOnEmailConfirmed
+	 * @throws EmailIsAlreadyConfirmed If the email is already confirmed
 	 */
 	suspend fun resendConfirmationEmail() {
 		Timber.d("Confirmation email sent")
@@ -486,6 +498,7 @@ data class VerificationSession internal constructor(
 	 * After a 100 retries it stops with a [SuspensionTimeOutException].
 	 *
 	 * @see sendConfirmationEmail
+	 * @throws SuspensionTimeOutException Thrown if the email is not confirmed after a 100 retries
 	 */
 	suspend fun resumeOnEmailConfirmed() {
 		emailPollJob?.cancel()
@@ -521,6 +534,7 @@ data class VerificationSession internal constructor(
 	 * Starts polling the backend and suspends until the identity verification result is available.
 	 * After a 100 retries it stops with a [SuspensionTimeOutException].
 	 * @see startIdentification
+	 * @throws SuspensionTimeOutException Thrown if the email is not confirmed after a 100 retries
 	 */
 	suspend fun resumeOnVerificationCompleted() {
 		verificationPollJob?.cancel()
@@ -555,6 +569,8 @@ data class VerificationSession internal constructor(
 	 * Calling this function lets you update your email address associated to your account.
 	 *
 	 * Unless the user is logged in and has provided all necessary information, the function will not run successfully.
+	 *
+	 * @throws VerificationSessionIllegalAction Thrown if the personal information of the user has not yet been provided
 	 */
 	suspend fun updateEmail(email: String) {
 		if (!loggedIn) throw VerificationSessionIllegalAction(IllegalAction.NotLoggedIn)
@@ -642,6 +658,7 @@ data class VerificationSession internal constructor(
 	 * Returns how much the subscription costs per year in USD.
 	 *
 	 * @return the price of subscription per year in USD
+	 * @throws Web3Exception Thrown if there was some kind of error while calling the blockchain
 	 */
 	suspend fun getMembershipCostPerYearText(): String {
 		val getSubscriptionCostFunction = ABIFunction<BigInteger>(
@@ -695,6 +712,7 @@ data class VerificationSession internal constructor(
 	 * Estimates the price based on how long the user wishes to subscribe.
 	 *
 	 * @return the estimated costs wrapped in a [PaymentEstimation] object.
+	 * @throws Web3Exception Thrown if there was some kind of error while calling the blockchain
 	 */
 	suspend fun estimatePayment(yearsPurchased: Int): PaymentEstimation {
 		refreshSession()
