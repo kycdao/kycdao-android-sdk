@@ -1,20 +1,17 @@
 package com.kycdao.android.sdk.verificationSession
 
-import android.media.session.MediaSession.Token
 import android.net.Uri
 import android.webkit.URLUtil
 import androidx.activity.ComponentActivity
 import com.bitraptors.networking.api.models.NetworkErrorResponse
 import com.kycdao.android.sdk.CustomKoinComponent
+import com.kycdao.android.sdk.contract.ERC721Contract
 import com.kycdao.android.sdk.dto.AuthorizeMintingResponse
 import com.kycdao.android.sdk.dto.TokenDetailsDto
 import com.kycdao.android.sdk.dto.UserDto
 import com.kycdao.android.sdk.exceptions.*
 import com.kycdao.android.sdk.model.*
-import com.kycdao.android.sdk.model.functions.ABIFunction
-import com.kycdao.android.sdk.model.functions.KYCGetRequiredMintCostForCodeFunction
-import com.kycdao.android.sdk.model.functions.KYCGetRequiredMintCostForSecondsFunction
-import com.kycdao.android.sdk.model.functions.KYCGetSubscriptionCostPerYearUSDFunction
+import com.kycdao.android.sdk.model.functions.*
 import com.kycdao.android.sdk.model.functions.mint.MintFunction
 import com.kycdao.android.sdk.model.functions.mint.MintingProperties
 import com.kycdao.android.sdk.model.functions.mint.MintingTransactionResult
@@ -34,8 +31,6 @@ import org.koin.core.component.get
 import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 import org.web3j.abi.FunctionEncoder
-import org.web3j.abi.datatypes.Function
-import org.web3j.abi.datatypes.Uint
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.methods.request.Transaction
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt
@@ -60,7 +55,7 @@ data class VerificationSession internal constructor(
 	private val kycConfig: SmartContractConfig?,
 	private val accreditedConfig: SmartContractConfig?,
 	private val personaData: Persona,
-	private val sessionData: SessionData,
+	private var sessionData: SessionData,
 	internal val rpcURL: String,
 	/**
 	 * The wallet session associated with this verification session, used to communicate with a wallet
@@ -97,6 +92,8 @@ data class VerificationSession internal constructor(
 	private val networkDatasource: NetworkDatasource by inject()
 	private var scope = CoroutineScope(Dispatchers.IO)
 
+	val hasMembership: Boolean get() = sessionData.user.hasMembership
+
 	/**
 	 * A unique identifier for this session
 	 */
@@ -119,6 +116,8 @@ data class VerificationSession internal constructor(
 	 */
 	val emailConfirmed: Boolean
 		get() = sessionData.user.isEmailConfirmed()
+	val currentEmail: String?
+		get() = sessionData.user.email
 
 	/**
 	 * Whether the user is logged in or not.
@@ -147,10 +146,12 @@ data class VerificationSession internal constructor(
 	private var emailPollJob: Job? = null
 	private var verificationPollJob: Job? = null
 
+	private var personaSessionData: PersonaSessionData? = null
 
-	private fun loginProof(): String {
-		return "kycDAO-login-${sessionData.nonce}"
-	}
+
+	private val loginProof: String
+		get() = "kycDAO-login-${sessionData.nonce}"
+
 
 	/**
 	 * Provides the user selectable NFT images
@@ -158,28 +159,51 @@ data class VerificationSession internal constructor(
 	 */
 	fun getNFTImages(): List<TokenImage> {
 		return sessionData.user.availableImages.filter { it.imageType == ImageType.Identicon }
+
+	}
+
+	/**
+	 * Regenerates the list of available NFT images
+	 * @return A list of the newly generated images
+	 */
+	suspend fun regenerateNFTImages(): List<TokenImage> {
+		networkDatasource.getNewIdenticons()
+		refreshUser()
+
+		return getNFTImages()
 	}
 
 
 	/**
 	 * Logs in the user to the current session
 	 * The user will be redirected to their wallet, where they will have to sign a session data in order to login
+	 *
+	 * @throws UserAlreadyLoggedIn If there is already a session for this user. To prevent this, only call this function if the [loggedIn] value is false.
 	 */
 	suspend fun login() {
 		val signature: String?
 		try {
-			signature = walletSession.personalSign(walletAddress, loginProof())
+			signature = walletSession.personalSign(walletAddress, loginProof)
 		} catch (e: Exception) {
 			throw PersonalSignException(e)
 		}
 		Timber.d("---------- Input ----------")
 		Timber.e("signature: $signature")
 		val userDto: UserDto?
-
-		userDto = networkDatasource.login(LoginRequestBody(signature))
-		Timber.d("---------- Output ----------")
-		Timber.e("userDto: $userDto")
-		sessionData.user = userDto.mapToKycUser()
+		try {
+			userDto = networkDatasource.login(LoginRequestBody(signature))
+			Timber.d("---------- Output ----------")
+			Timber.e("userDto: $userDto")
+			sessionData.user = userDto.mapToKycUser()
+		} catch (e: KycNetworkCallException) {
+			if (e.networkException is NetworkErrorResponse.ApiError) {
+				if (e.networkException.body.error_code != "SessionUserAlreadyExists") {
+					throw UserAlreadyLoggedIn()
+				}
+			} else {
+				throw e
+			}
+		}
 
 	}
 
@@ -188,6 +212,8 @@ data class VerificationSession internal constructor(
 	 * If the provided email address is not yet confirmed then a confirmation email will be sent.
 	 *
 	 * @param personalData The personal information required, wrapped in a [PersonalData] class
+	 *
+	 * @throws VerificationSessionIllegalAction Throws this exception if the disclaimer is not yet accepted
 	 */
 	suspend fun setPersonalData(personalData: PersonalData) {
 		if (!disclaimerAccepted)
@@ -200,14 +226,16 @@ data class VerificationSession internal constructor(
 	 * Authorizes the minting process for a selected NFT image
 	 * Returns after the minting of the selected NFT has been authorized
 	 *
-	 * The list of available images can be acquired by calling the [getNFTImages] function.
+	 * The list of available images can be acquired by calling the [getNFTImages] function.x
 	 *
 	 * @param selectedImage the ID of the NFT image that is about to be minted
 	 * @param membershipDuration the number of years the membership is requested.
+	 *
+	 * @throws NoBlockChainAccountFound Throws this if the user does not have a blockchain account.
 	 */
-	suspend fun requestMinting(selectedImage: String, membershipDuration: UInt) {
+	suspend fun requestMinting(selectedImage: String, membershipDuration: Int?) {
 		Timber.d("Selected Nft Image: $selectedImage")
-		authorizeMintingOfNFT(selectedImage, membershipDuration)
+		authorizeMintingOfNFT(selectedImage, membershipDuration?.toUInt() ?: 0u)
 		checkAuthorizeMinting()
 	}
 
@@ -219,6 +247,9 @@ data class VerificationSession internal constructor(
 	 * @return An URL for an explorer where the minting transaction can be viewed
 	 *
 	 * @param performTransaction Lambda function which contains the actual minting call, using the WalletSession interface
+	 *
+	 * @throws SendTransactionException Throws this if there was an error while sending the minting transaction to the wallet. The original exception is wrapped inside.
+	 * @throws GenericKycException Throws this if a token id is not present in the transaction receipt.
 	 */
 	suspend fun mint(): MintingResult {
 		val authCode =
@@ -239,19 +270,33 @@ data class VerificationSession internal constructor(
 		} catch (e: Exception) {
 			throw SendTransactionException(e)
 		}
+
 		Timber.d("Receipt hash: ${result.txHash}")
+
 		val receipt = continueWhenTransactionFinished(result.txHash)
-		val tokenId: String?
+		Timber.d("LOGS: ${receipt.transactionReceipt.get().logs}")
+		var tokenId: String? = null
 		try {
-			tokenId = receipt.transactionReceipt.get().logs[0].topics[3]
+			for (log in receipt.transactionReceipt.get().logs) {
+				val result = ERC721Contract.getTopicID(log)
+				if (result != null) {
+					tokenId = result
+					break
+				}
+			}
 		} catch (e: Exception) {
 			throw GenericKycException(
 				"Token id not found inside the transaction receipt",
 				e.cause
 			)
 		}
-		val decimalTokenId = tokenId.convertBigInteger().toString(10)
-		val tokenDetails = tokenMinted(authCode, decimalTokenId, result.txHash)
+		if (tokenId == null) {
+			throw GenericKycException(
+				"Token id not found inside the transaction receipt", null
+			)
+		}
+		Timber.d("TOKENID: $tokenId")
+		val tokenDetails = tokenMinted(authCode, tokenId, result.txHash)
 
 		this.authorizeMintingResponse = null
 
@@ -272,6 +317,9 @@ data class VerificationSession internal constructor(
 	 *
 	 * @return The result of the identity verification flow. It only tells whether the user completed the identity flow or cancelled it. Information regarding the validity of the identity verification can be accessed at [verificationStatus]
 	 * @see resumeOnVerificationCompleted
+	 *
+	 * @throws VerificationSessionIllegalAction If the email is not yet confirmed
+	 * @throws PersonaException.PersonaVerificationFailed If the Persona verification process produced an unexpected error
 	 */
 	suspend fun startIdentification(activity: ComponentActivity): IdentityFlowResult {
 		if (!emailConfirmed)
@@ -285,9 +333,22 @@ data class VerificationSession internal constructor(
 				templateId = personaData.templateID,
 				activity = activity,
 				resultContinuation = continuation,
-				environment = personaData.environment
+				environment = personaData.environment,
+				personaSessionData = personaSessionData
 			)
 		}
+		if (identificationResult is InquiryResponse.Cancel) {
+			identificationResult.inquiryId?.let { inquiryId ->
+				personaSessionData = PersonaSessionData(
+					referenceId = referenceID,
+					inquiryId = inquiryId,
+					sessionToken = identificationResult.sessionToken
+				)
+			}
+		} else {
+			personaSessionData = null
+		}
+		refreshUser()
 		return when (identificationResult) {
 			is InquiryResponse.Complete -> IdentityFlowResult.COMPLETED
 			is InquiryResponse.Cancel -> IdentityFlowResult.CANCELLED
@@ -335,6 +396,8 @@ data class VerificationSession internal constructor(
 	 * Creates an estimation for the fee of minting.
 	 *
 	 * @return The estimated fee wrapped in a [PriceEstimation]
+	 *
+	 * @throws VerificationSessionIllegalAction If there is no active authorized minting process
 	 */
 	suspend fun getMintingPrice(): PriceEstimation {
 		val authCode =
@@ -358,6 +421,7 @@ data class VerificationSession internal constructor(
 	 * Sends a confirmation email to the [provided][setPersonalData] email address if the address in question has not been confirmed previously.
 	 *
 	 * @see resumeOnEmailConfirmed
+	 * @throws EmailIsAlreadyConfirmed If the email is already confirmed
 	 */
 	suspend fun resendConfirmationEmail() {
 		Timber.d("Confirmation email sent")
@@ -410,12 +474,17 @@ data class VerificationSession internal constructor(
 		sessionData.user = updatedUser
 	}
 
+	private suspend fun refreshSession() {
+		val updatedSession = networkDatasource.getSession().mapToSessionData()
+		sessionData = updatedSession
+	}
+
 	private suspend fun updateUserPersonalData(personalData: PersonalData) {
 		val userDto = networkDatasource.updateUser(
 			UpdateUserRequestBody(
 				email = personalData.email,
 				residency = personalData.residency,
-				legal_entity = personalData.isLegalEntity,
+				legal_entity = false,
 			)
 		)
 		val userFromNetwork = userDto.mapToKycUser()
@@ -429,6 +498,7 @@ data class VerificationSession internal constructor(
 	 * After a 100 retries it stops with a [SuspensionTimeOutException].
 	 *
 	 * @see sendConfirmationEmail
+	 * @throws SuspensionTimeOutException Thrown if the email is not confirmed after a 100 retries
 	 */
 	suspend fun resumeOnEmailConfirmed() {
 		emailPollJob?.cancel()
@@ -464,8 +534,9 @@ data class VerificationSession internal constructor(
 	 * Starts polling the backend and suspends until the identity verification result is available.
 	 * After a 100 retries it stops with a [SuspensionTimeOutException].
 	 * @see startIdentification
+	 * @throws SuspensionTimeOutException Thrown if the email is not confirmed after a 100 retries
 	 */
-	suspend fun resumeWhenIdentified() {
+	suspend fun resumeOnVerificationCompleted() {
 		verificationPollJob?.cancel()
 		var timeOutCounter = 0
 		verificationPollJob = scope.launch {
@@ -498,6 +569,8 @@ data class VerificationSession internal constructor(
 	 * Calling this function lets you update your email address associated to your account.
 	 *
 	 * Unless the user is logged in and has provided all necessary information, the function will not run successfully.
+	 *
+	 * @throws VerificationSessionIllegalAction Thrown if the personal information of the user has not yet been provided
 	 */
 	suspend fun updateEmail(email: String) {
 		if (!loggedIn) throw VerificationSessionIllegalAction(IllegalAction.NotLoggedIn)
@@ -510,7 +583,6 @@ data class VerificationSession internal constructor(
 		val personalData = PersonalData(
 			email = email,
 			residency = residency,
-			isLegalEntity = isLegalEntity
 		)
 		updateUserPersonalData(personalData)
 	}
@@ -544,7 +616,7 @@ data class VerificationSession internal constructor(
 	private suspend fun continueWhenTransactionFinished(txHash: String): EthGetTransactionReceipt {
 		var timeOutCounter = 0
 		while (true) {
-			if (timeOutCounter > 50) {
+			if (timeOutCounter > 100) {
 				throw SuspensionTimeOutException
 			} else {
 				timeOutCounter++
@@ -586,14 +658,24 @@ data class VerificationSession internal constructor(
 	 * Returns how much the subscription costs per year in USD.
 	 *
 	 * @return the price of subscription per year in USD
+	 * @throws Web3Exception Thrown if there was some kind of error while calling the blockchain
 	 */
-	suspend fun getMembershipCostPerYear(): BigInteger {
+	suspend fun getMembershipCostPerYearText(): String {
 		val getSubscriptionCostFunction = ABIFunction<BigInteger>(
 			function = KYCGetSubscriptionCostPerYearUSDFunction(),
 			contractAddress = getKycContractAddress(),
 			walletAddress = walletAddress
 		)
-		return web3j.callABIFunction(getSubscriptionCostFunction)
+		val getDecimalFunction = ABIFunction<BigInteger>(
+			function = KYCGetSubscriptionCostDecimalFunction(),
+			contractAddress = getKycContractAddress(),
+			walletAddress = walletAddress
+		)
+		val rawPrice = scope.async { web3j.callABIFunction(getSubscriptionCostFunction) }
+		val decimal = scope.async { web3j.callABIFunction(getDecimalFunction) }
+		val divider = BigInteger.TEN.pow(decimal.await().intValueExact())
+		val price = rawPrice.await().toBigDecimal().divide(divider.toBigDecimal())
+		return price.toString()
 	}
 
 	private suspend fun getRawRequiredMintCostForCode(authCode: String): BigInteger {
@@ -630,9 +712,11 @@ data class VerificationSession internal constructor(
 	 * Estimates the price based on how long the user wishes to subscribe.
 	 *
 	 * @return the estimated costs wrapped in a [PaymentEstimation] object.
+	 * @throws Web3Exception Thrown if there was some kind of error while calling the blockchain
 	 */
-	suspend fun estimatePayment(yearsPurchased: UInt): PaymentEstimation {
-		val membershipPayment = getRequiredMintCostForYears(yearsPurchased)
+	suspend fun estimatePayment(yearsPurchased: Int): PaymentEstimation {
+		refreshSession()
+		val membershipPayment = getRequiredMintCostForYears(yearsPurchased.toUInt())
 		val discountYears = sessionData.discountYears ?: 0
 		return PaymentEstimation(
 			paymentAmount = membershipPayment,

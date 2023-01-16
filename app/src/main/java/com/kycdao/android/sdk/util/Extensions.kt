@@ -3,6 +3,7 @@ package com.kycdao.android.sdk.util
 import com.kycdao.android.sdk.model.NativeCurrency
 import org.web3j.abi.datatypes.generated.Uint32
 import java.math.BigInteger
+import java.math.MathContext
 import kotlin.math.abs
 import kotlin.math.log10
 import kotlin.math.max
@@ -88,5 +89,5 @@ fun String.web3jEncodedUint32(): Uint32 {
 }
 
 fun BigInteger.toText(currency: NativeCurrency) : String{
-	return "${this.decimalText(currency.baseToNativeDivisor)} ${currency.symbol}"
+	return "${this.toBigDecimal().divide(currency.baseToNativeDivisor.toBigDecimal(), MathContext.DECIMAL32)} ${currency.symbol}"
 }

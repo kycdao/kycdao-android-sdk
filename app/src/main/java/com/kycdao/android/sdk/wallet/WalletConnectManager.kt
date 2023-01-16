@@ -101,8 +101,10 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 	}
 
 	fun stopListening() {
-		wcSession?.removeListener()
-		isListening = false
+		if(isListening) {
+			wcSession?.removeListener()
+			isListening = false
+		}
 	}
 
 
@@ -122,7 +124,7 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 		}
 	}
 
-	private suspend fun checkOldConnection() {
+	suspend fun checkOldConnection() {
 		val oldKey = datastore.getOldWCKey()
 		Timber.d("Oldkey: $oldKey")
 		if (oldKey != null) {
@@ -130,7 +132,7 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 		}
 	}
 
-	private fun closeOldConnection(oldWCKey: String) {
+	private suspend fun closeOldConnection(oldWCKey: String) {
 		val key = ByteArray(32).also { Random().nextBytes(it) }.toNoPrefixHexString()
 		val config = Session.Config(
 			oldWCKey,
@@ -157,7 +159,7 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 		}
 	}
 
-	private suspend fun openNewConnection() {
+	private fun openNewConnection() {
 		wcSession = createWCSession()
 		wcSession?.let { session ->
 			_wcURI.tryEmit(session.wcConfig.toWCUri())
@@ -191,6 +193,7 @@ object WalletConnectManager : CustomKoinComponent(), CoroutineScope {
 		if (!isListening)
 			throw WalletSessionNotListening()
 		wcSession?.let { session ->
+			Timber.d("URI CONFIG: ${session.wcConfig.toWCUri()}")
 			WalletIntent.executeFromUri(session.wcConfig.toWCUri())
 		} ?: run {
 			throw WalletSessionNotAvailableException()

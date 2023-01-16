@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="TextAppearanceBody1.Bold" parent="TextAppearanceBody1">
+        <item name="android:fontFamily">@font/google_sans_bold</item>
+    </style>
+
+    <style name="TextAppearanceHeadline6.Bold" parent="TextAppearanceHeadline6">
+        <item name="android:fontFamily">@font/google_sans_bold</item>
+    </style>
+
+    <style name="TextAppearanceHeadline6" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">@dimen/TextSize_Headline6</item>
+        <item name="android:fontFamily">@font/google_sans_regular</item>
+    </style>
+
+    <style name="TextAppearanceBody1" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">@dimen/TextSize_Body1</item>
+        <item name="android:fontFamily">@font/google_sans_regular</item>
+    </style>
+
+    <dimen name="TextSize_Body1">16sp</dimen>
+    <dimen name="TextSize_Headline6">20sp</dimen>
+
+</resources>

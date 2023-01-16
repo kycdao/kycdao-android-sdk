@@ -15,6 +15,9 @@ interface APIService {
         @Body body: CreateSessionRequestBody,
     ) : NetworkResponse<SessionDto,KYCErrorResponse>
 
+    @GET("session")
+    suspend fun getSession() : NetworkResponse<SessionDto,KYCErrorResponse>
+
     @POST("user")
     suspend fun login(
         @Body body: LoginRequestBody,
@@ -30,6 +33,9 @@ interface APIService {
 
     @POST("user/email_confirmation")
     suspend fun sendEmailConfirm() : NetworkResponse<EmptyResponse, KYCErrorResponse>
+
+    @POST("token/identicon")
+    suspend fun getNewIdenticons(): NetworkResponse<EmptyResponse,KYCErrorResponse>
 
     @GET("user")
     suspend fun getUser() : NetworkResponse<UserDto,KYCErrorResponse>

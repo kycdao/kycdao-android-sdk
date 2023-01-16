@@ -30,6 +30,10 @@ class NetworkDatasourceImpl(
         return api.sendEmailConfirm().handleResponse()
     }
 
+    override suspend fun getSession(): SessionDto {
+        return api.getSession().handleResponse()
+    }
+
     override suspend fun getUser(): UserDto {
         return api.getUser().handleResponse()
     }
@@ -48,6 +52,10 @@ class NetworkDatasourceImpl(
 
     override suspend fun getSupportedNetworks(): List<Network> {
         return api.getNetworks().handleResponse()
+    }
+
+    override suspend fun getNewIdenticons() {
+        return api.getNewIdenticons().handleResponse()
     }
 
 }

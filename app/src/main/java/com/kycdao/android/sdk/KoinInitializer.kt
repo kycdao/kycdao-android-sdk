@@ -34,6 +34,7 @@ internal class KoinInitializer : Initializer<KoinApplication> {
                 networkModule,
                 domainModule,
                 web3Module,
+                moshiModule
             )
         }
         return MyKoinContext.koinApp!!

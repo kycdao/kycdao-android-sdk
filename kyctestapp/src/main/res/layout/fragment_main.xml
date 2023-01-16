@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/root"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:paddingHorizontal="@dimen/spacing_normal">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/title1"
+                    style="@style/TextAppearanceHeadline6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_32dp"
+                    android:text="Connect Wallet"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/separator1"
+                    android:layout_width="match_parent"
+                    android:layout_height="5dp"
+                    android:layerType="software"
+                    android:src="@drawable/separator_solid"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/title1" />
+
+                <Button
+                    android:id="@+id/startVerificationFlow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_4dp"
+                    android:text="Connect wallet"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/separator1" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/title2"
+                    style="@style/TextAppearanceHeadline6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_32dp"
+                    android:text="Check token for address"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/startVerificationFlow" />
+
+                <ImageView
+                    android:id="@+id/separator2"
+                    android:layout_width="match_parent"
+                    android:layout_height="5dp"
+                    android:layerType="software"
+                    android:src="@drawable/separator_solid"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/title2" />
+
+                <androidx.appcompat.widget.AppCompatEditText
+                    android:id="@+id/polygonWalletAddress"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:hint="Polygon Wallett Address"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/separator2" />
+
+                <Button
+                    android:id="@+id/addressHasValidToken"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_4dp"
+                    android:text="Check address for valid token"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/polygonWalletAddress" />
+
+
+<!--                <androidx.appcompat.widget.AppCompatTextView-->
+                <!--                    android:id="@+id/title3"-->
+                <!--                    style="@style/TextAppearanceHeadline6"-->
+                <!--                    android:layout_width="0dp"-->
+                <!--                    android:layout_height="wrap_content"-->
+                <!--                    android:layout_marginTop="@dimen/spacing_32dp"-->
+                <!--                    android:text="Check token for the connected wallet"-->
+                <!--                    app:layout_constraintStart_toStartOf="parent"-->
+                <!--                    app:layout_constraintTop_toBottomOf="@+id/addressHasValidToken" />-->
+
+<!--                <ImageView-->
+<!--                    android:id="@+id/separator3"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="5dp"-->
+<!--                    android:layerType="software"-->
+<!--                    android:src="@drawable/separator_solid"-->
+<!--                    app:layout_constraintEnd_toEndOf="parent"-->
+<!--                    app:layout_constraintStart_toStartOf="parent"-->
+<!--                    app:layout_constraintTop_toBottomOf="@id/title3" />-->
+
+<!--                <Button-->
+<!--                    android:id="@+id/connectMetaMaskWallet"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_marginTop="@dimen/spacing_4dp"-->
+<!--                    android:text="Connect MetaMask Wallet"-->
+<!--                    app:layout_constraintStart_toStartOf="parent"-->
+<!--                    app:layout_constraintTop_toBottomOf="@id/separator3" />-->
+
+<!--                <androidx.appcompat.widget.AppCompatTextView-->
+<!--                    android:id="@+id/walletConnection"-->
+<!--                    style="@style/TextAppearanceBody1"-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="No wallet connected"-->
+<!--                    app:layout_constraintStart_toStartOf="parent"-->
+<!--                    app:layout_constraintTop_toBottomOf="@+id/connectMetaMaskWallet" />-->
+
+<!--                <Button-->
+<!--                    android:id="@+id/walletHasValidToken"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_marginTop="@dimen/spacing_normal"-->
+<!--                    android:text="Has the Wallet had a valid token?"-->
+<!--                    app:layout_constraintStart_toStartOf="parent"-->
+<!--                    app:layout_constraintTop_toBottomOf="@id/walletConnection" />-->
+
+<!--                <androidx.appcompat.widget.AppCompatTextView-->
+<!--                    android:id="@+id/walletTokenValidity"-->
+<!--                    style="@style/TextAppearanceBody1"-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="Connect a wallet to check token"-->
+<!--                    app:layout_constraintStart_toStartOf="parent"-->
+<!--                    app:layout_constraintTop_toBottomOf="@+id/walletHasValidToken" />-->
+
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+<!--            <View-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="500dp">-->
+
+<!--            </View>-->
+
+<!--            <Button-->
+<!--                android:id="@+id/connectWallet"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/createKyc"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="kycSession" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/getPerYear"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="GetPerYear" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/estimateCost"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="EstimateCost" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/login"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="Login" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/addPersonalInfoBtn"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="add personal" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/resendEmail"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="resend" />-->
+
+
+<!--            <Button-->
+<!--                android:id="@+id/startPersona"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="start persona" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/selectNFT"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="select Nft" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/mintNFT"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="mint NFT" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/hasTokenValid"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="has validToken" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/acceptDisclaimer"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="accept disclaimer" />-->
+
+<!--            <ImageView-->
+<!--                android:id="@+id/qrImageView"-->
+<!--                android:layout_width="300dp"-->
+<!--                android:layout_height="300dp" />-->
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </ScrollView>
+</androidx.appcompat.widget.LinearLayoutCompat>

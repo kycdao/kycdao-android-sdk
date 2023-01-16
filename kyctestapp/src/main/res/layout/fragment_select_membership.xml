@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:paddingHorizontal="@dimen/spacing_normal">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/title1"
+        style="@style/TextAppearanceHeadline6"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_32dp"
+        android:text="Mint membership"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/separator1"
+        android:layout_width="match_parent"
+        android:layout_height="5dp"
+        android:layerType="software"
+        android:src="@drawable/separator_solid"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title1" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/priceLabel"
+        style="@style/TextAppearanceBody1.Bold"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_normal"
+        android:text="Membership price"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/separator1" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/price"
+        style="@style/TextAppearanceBody1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_4dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/priceLabel"
+        tools:text="$5 / year" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/periodLabel"
+        style="@style/TextAppearanceBody1.Bold"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_normal"
+        android:text="Membership period"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/price" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/period"
+        style="@style/TextAppearanceBody1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_4dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/periodLabel"
+        tools:text="1 year" />
+
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/payment"
+        style="@style/TextAppearanceHeadline6.Bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_32dp"
+        tools:text="103123012730273"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/period" />
+
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/discount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/payment"
+        tools:text="No discounts" />
+
+    <Button
+        android:id="@+id/increasePeriod"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:text="+"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/periodLabel" />
+
+    <Button
+        android:id="@+id/decreasePeriod"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/spacing_4dp"
+        android:text="-"
+        app:layout_constraintBottom_toBottomOf="@+id/increasePeriod"
+        app:layout_constraintEnd_toStartOf="@+id/increasePeriod"
+        app:layout_constraintTop_toTopOf="@+id/increasePeriod" />
+
+
+    <Button
+        android:id="@+id/selectMembership"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/spacing_32dp"
+        android:text="Select membership"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
