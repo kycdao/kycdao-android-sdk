@@ -67,8 +67,10 @@ class ConfirmEmailFragment : BaseFragment<FragmentConfirmEmailBinding>() {
 
     private fun setupCheckEmailConfirm() {
         lifecycleScope.launch {
-            sdk.getVerificationSession().resumeOnEmailConfirmed()
-            navigateNext()
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                sdk.getVerificationSession().resumeOnEmailConfirmed()
+                navigateNext()
+            }
         }
     }
 

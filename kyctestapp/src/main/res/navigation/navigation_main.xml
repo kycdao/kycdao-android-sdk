@@ -168,6 +168,11 @@
         <argument
             android:name="explorer_url"
             app:argType="string" />
+        <action
+            android:id="@+id/action_mintingSuccessfulFragment_to_walletConnectedFragment"
+            app:popUpTo="@id/walletConnectedFragment"
+            app:popUpToInclusive="true"
+            app:destination="@id/walletConnectedFragment" />
     </fragment>
 
 

@@ -1,6 +1,6 @@
 package com.kycdao.android.sdk.model
 
-data class NetworkConfiguration(
+data class NetworkConfig(
 	val chainId: String,
 	val rpcURL: String?,
 )

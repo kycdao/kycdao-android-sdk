@@ -29,5 +29,8 @@ class MintingSuccessfulFragment : BaseFragment<FragmentMintingSuccesfulBinding>(
             i.data = Uri.parse(url)
             startActivity(i)
         }
+        binding.exit.setOnClickListener {
+            navigateWithAction(MintingSuccessfulFragmentDirections.actionMintingSuccessfulFragmentToWalletConnectedFragment())
+        }
     }
 }

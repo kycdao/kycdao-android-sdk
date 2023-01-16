@@ -409,10 +409,10 @@ data class VerificationSession internal constructor(
 			walletAddress = walletAddress
 		)
 		val requiredMintCost = getRequiredMintCostForCode(authCode)
-		val gasEstimation = estimateGasUse(mintingFunction.toTransaction(requiredMintCost))
+		val gasEstimation = calculateGasPriceFor(mintingFunction.toTransaction(requiredMintCost))
 		return PriceEstimation(
 			paymentAmount = requiredMintCost,
-			gasFee = gasEstimation,
+			gasFee = gasEstimation.fee,
 			currency = network.native_currency
 		)
 	}
@@ -689,8 +689,9 @@ data class VerificationSession internal constructor(
 
 	private suspend fun getRequiredMintCostForCode(authCode: String): BigInteger {
 		val mintingCost = getRawRequiredMintCostForCode(authCode)
-		val withSlippage = (mintingCost.toBigDecimal().times(BigDecimal("1.1"))).toBigInteger()
-		return withSlippage
+		val result = mintingCost.divideAndRemainder(BigInteger.TEN)
+		val slippage = result[0]
+		return mintingCost + slippage
 	}
 
 	private suspend fun getRequiredMintCostForYears(years: UInt): BigInteger {

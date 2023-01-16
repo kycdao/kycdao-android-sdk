@@ -8,7 +8,7 @@ import com.kycdao.android.sdk.dto.toModel
 import com.kycdao.android.sdk.exceptions.ConfigNotFoundException
 import com.kycdao.android.sdk.exceptions.UnsupportedNetworkException
 import com.kycdao.android.sdk.model.Network
-import com.kycdao.android.sdk.model.NetworkConfiguration
+import com.kycdao.android.sdk.model.NetworkConfig
 import com.kycdao.android.sdk.model.VerificationType
 import com.kycdao.android.sdk.model.functions.ABIFunction
 import com.kycdao.android.sdk.model.functions.token_validation.HasValidTokenFunction
@@ -33,7 +33,7 @@ object VerificationManager{
 	data class Configuration(
 		//val apiKey: String,
 		val environment: KycDaoEnvironment,
-		val networkConfigurations: Set<NetworkConfiguration> = emptySet()
+		val networkConfigurations: Set<NetworkConfig> = emptySet()
 	)
 
 	private var configuration: Configuration? = null

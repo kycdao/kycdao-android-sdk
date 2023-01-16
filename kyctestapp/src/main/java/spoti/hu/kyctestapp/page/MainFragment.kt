@@ -35,13 +35,14 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
 		VerificationManager.configure(
 			VerificationManager.Configuration(KycDaoEnvironment.Development)
 		)
-		WalletConnectManager.startListening()
 	}
 
 	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 		setupVerificationFlow()
 		setupAddressTokenValidation()
+		WalletConnectManager.startListening()
+
 //        walletTokenValidation()
 //        connectMetaMaskWallet()
 //        legacyFunctions()
@@ -52,12 +53,12 @@ class MainFragment : BaseFragment<FragmentMainBinding>() {
 
 		binding.addressHasValidToken.setOnClickListener {
 			lifecycleScope.launch {
-				val text = VerificationManager.hasValidToken(
+				val result = VerificationManager.hasValidToken(
 					VerificationType.KYC,
 					binding.polygonWalletAddress.text.toString(),
 					"eip155:80001"
-				).toString()
-				Toast.makeText(requireContext(), text, Toast.LENGTH_SHORT).show()
+				)
+				Toast.makeText(requireContext(), if(result) "This address has a valid token" else "This address DOES NOT have a valid token", Toast.LENGTH_LONG).show()
 			}
 		}
 	}
