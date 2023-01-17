@@ -253,7 +253,7 @@ data class VerificationSession internal constructor(
 	 */
 	suspend fun mint(): MintingResult {
 		val authCode =
-			authorizeMintingResponse?.code
+			authorizeMintingResponse?.token?.authorization_code
 				?: throw VerificationSessionIllegalAction(IllegalAction.AuthorizationMissing)
 		val mintingFunction = ABIFunction<Nothing>(
 			function = MintFunction(authCode),
@@ -401,7 +401,7 @@ data class VerificationSession internal constructor(
 	 */
 	suspend fun getMintingPrice(): PriceEstimation {
 		val authCode =
-			authorizeMintingResponse?.code
+			authorizeMintingResponse?.token?.authorization_code
 				?: throw VerificationSessionIllegalAction(IllegalAction.AuthorizationMissing)
 		val mintingFunction = ABIFunction<Nothing>(
 			function = MintFunction(authCode),
@@ -463,7 +463,7 @@ data class VerificationSession internal constructor(
 
 	private suspend fun checkAuthorizeMinting() {
 		val mintingTxHash =
-			authorizeMintingResponse?.tx_hash ?: throw VerificationSessionIllegalAction(
+			authorizeMintingResponse?.token?.authorization_tx_id ?: throw VerificationSessionIllegalAction(
 				IllegalAction.AuthorizationMissing
 			)
 		continueWhenTransactionFinished(mintingTxHash)

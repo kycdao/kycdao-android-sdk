@@ -1,6 +1,6 @@
 package com.kycdao.android.sdk.dto
 
 data class AuthorizeMintingResponse(
-    val code: String,
-    val tx_hash: String,
+    val token: TokenDetailsDto,
+    val metadata_url : String?
 )
