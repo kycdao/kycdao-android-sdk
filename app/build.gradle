@@ -41,15 +41,9 @@ afterEvaluate {
             release(MavenPublication) {
                 from components.release
 
-                groupId = 'com.github.kycDao'
-                artifactId = 'kycDao-android'
-                version = '0.28.42'
-            }
-        }
-        repositories {
-            maven {
-                name = 'myrepo'
-                url = "${project.buildDir}/repo"
+                groupId = 'com.kycDao'
+                artifactId = 'kycDao-android-sdk'
+                version = '0.1.0'
             }
         }
     }

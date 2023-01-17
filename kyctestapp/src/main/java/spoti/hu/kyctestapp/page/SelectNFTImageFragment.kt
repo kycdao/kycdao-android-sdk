@@ -44,6 +44,7 @@ class SelectNFTImageFragment : BaseFragment<FragmentSelectNftImageBinding>() {
             lifecycleScope.launch{
                 val newImages = sdk.getVerificationSession().regenerateNFTImages()
                 adapter.setData(newImages)
+                selectedImage = newImages[0]
             }
         }
     }
