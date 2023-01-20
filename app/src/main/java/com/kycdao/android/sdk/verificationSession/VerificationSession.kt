@@ -673,7 +673,7 @@ data class VerificationSession internal constructor(
 		)
 		val rawPrice = scope.async { web3j.callABIFunction(getSubscriptionCostFunction) }
 		val decimal = scope.async { web3j.callABIFunction(getDecimalFunction) }
-		val divider = BigInteger.TEN.pow(decimal.await().intValueExact())
+		val divider = BigInteger.TEN.pow(decimal.await().toInt())
 		val price = rawPrice.await().toBigDecimal().divide(divider.toBigDecimal())
 		return price.toString()
 	}
